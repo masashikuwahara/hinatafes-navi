@@ -1,109 +1,127 @@
 <script setup lang="ts">
-useSeoMeta({
-  title: 'トップ',
-  description:
-    'ひなたフェス2026の現地参加をサポートする、非公式のスマホ向け現地ナビアプリです。',
+import {
+  sortedHomeFeatures,
+  todayFeatures,
+} from '~/data/homeFeatures'
+
+useHead({
+  title: 'ひなたフェス2026 現地ナビ',
+  meta: [
+    {
+      name: 'description',
+      content:
+        'ひなたフェス2026の現地参加時に使いやすい、非公式ファン向けナビアプリです。持ち物、スケジュール、ブース、マップ、熱中症対策などをまとめます。',
+    },
+  ],
 })
-
-type Feature = {
-  title: string
-  description: string
-  to: string
-  icon: string
-  badge?: string
-  priority?: boolean
-}
-
-const features: Feature[] = [
-  {
-    title: '持ち物チェック',
-    description: '忘れ物防止用のチェックリスト。チェック状態は保存予定です。',
-    to: '/checklist',
-    icon: '✅',
-    badge: '優先',
-    priority: true,
-  },
-  {
-    title: 'スケジュール',
-    description: '開場、物販、ブース、ライブ前後の予定を確認します。',
-    to: '/schedule',
-    icon: '🕒',
-    badge: '優先',
-    priority: true,
-  },
-  {
-    title: '会場マップ',
-    description: '会場内スポットや集合場所を確認するための土台です。',
-    to: '/map',
-    icon: '🗺️',
-    priority: true,
-  },
-  {
-    title: '出店・ブース',
-    description: 'フード、物販、展示などをジャンル別に探せるようにします。',
-    to: '/booths',
-    icon: '🏕️',
-  },
-  {
-    title: '熱中症対策',
-    description: '水分補給、休憩、日差し対策をすぐ確認できるページです。',
-    to: '/heat',
-    icon: '☀️',
-  },
-  {
-    title: 'ペンライトカラー',
-    description: 'メンバー別のペンライトカラー確認機能の入口です。',
-    to: '/penlight',
-    icon: '💡',
-  },
-  {
-    title: '参戦メモ',
-    description: '座席、集合場所、買ったもの、感想などを保存する予定です。',
-    to: '/memo',
-    icon: '📝',
-  },
-]
 </script>
 
 <template>
-  <div class="space-y-6">
-    <section class="hf-card overflow-hidden">
-      <div class="mb-4 inline-flex rounded-full bg-sky-100 px-3 py-1 text-xs font-bold text-sky-700">
-        スマホでサッと確認
+  <div class="space-y-8 pb-8">
+    <section
+      class="overflow-hidden rounded-[2rem] border border-sky-100 bg-gradient-to-br from-sky-50 via-white to-yellow-50 p-5 shadow-sm"
+    >
+      <div class="space-y-4">
+        <div
+          class="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-xs font-bold text-sky-700 shadow-sm"
+        >
+          <span>☀️</span>
+          <span>現地でサッと確認</span>
+        </div>
+
+        <div class="space-y-3">
+          <h1 class="text-2xl font-extrabold leading-tight text-slate-900">
+            ひなたフェス2026<br>
+            現地ナビ
+          </h1>
+
+          <p class="text-sm leading-relaxed text-slate-600">
+            持ち物、スケジュール、ブース、マップ、熱中症対策などをまとめて確認できる、
+            非公式ファン向けの現地サポートアプリです。
+          </p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <NuxtLink
+            to="/checklist"
+            class="rounded-2xl bg-sky-500 px-4 py-3 text-center text-sm font-bold text-white shadow-sm transition hover:bg-sky-600"
+          >
+            持ち物を確認
+          </NuxtLink>
+
+          <NuxtLink
+            to="/schedule"
+            class="rounded-2xl bg-white px-4 py-3 text-center text-sm font-bold text-sky-700 shadow-sm ring-1 ring-sky-100 transition hover:bg-sky-50"
+          >
+            予定を見る
+          </NuxtLink>
+        </div>
+
+        <p class="text-xs leading-relaxed text-slate-500">
+          ※公式情報ではありません。イベント詳細は必ず公式サイト・公式発表も確認してください。
+        </p>
       </div>
-
-      <h2 class="text-2xl font-black leading-tight text-slate-900">
-        ひなたフェス2026を<br>
-        現地で迷わず楽しむ
-      </h2>
-
-      <p class="mt-3 text-sm leading-7 text-slate-600">
-        持ち物、予定、マップ、メモなど、当日よく使う情報をまとめるための非公式ナビアプリです。
-      </p>
     </section>
 
-    <section class="space-y-3">
-      <div class="flex items-end justify-between">
+    <section class="space-y-4">
+      <div class="flex items-end justify-between gap-3">
         <div>
-          <p class="text-xs font-bold text-sky-600">
-            MENU
+          <p class="text-xs font-bold uppercase tracking-wider text-sky-500">
+            Today
           </p>
-          <h2 class="hf-section-title">
-            今日使う機能
+          <h2 class="text-xl font-extrabold text-slate-900">
+            今日使う
           </h2>
         </div>
 
-        <span class="hf-pill">
-          Phase 1
-        </span>
+        <p class="text-xs text-slate-500">
+          現地でよく使う機能
+        </p>
       </div>
 
-      <div class="grid gap-3">
+      <div class="grid grid-cols-1 gap-3">
         <FeatureCard
-          v-for="feature in features"
-          :key="feature.to"
-          v-bind="feature"
+          v-for="feature in todayFeatures"
+          :key="feature.id"
+          :feature="feature"
+          compact
         />
+      </div>
+    </section>
+
+    <section class="space-y-4">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-wider text-sky-500">
+          Menu
+        </p>
+        <h2 class="text-xl font-extrabold text-slate-900">
+          主要機能
+        </h2>
+      </div>
+
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <FeatureCard
+          v-for="feature in sortedHomeFeatures"
+          :key="feature.id"
+          :feature="feature"
+        />
+      </div>
+    </section>
+
+    <section
+      class="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm"
+    >
+      <h2 class="text-lg font-extrabold text-slate-900">
+        使い方メモ
+      </h2>
+
+      <div class="mt-4 space-y-3 text-sm leading-relaxed text-slate-600">
+        <p>
+          まずは「持ち物チェック」と「スケジュール」を確認して、当日の行動を整理します。
+        </p>
+        <p>
+          現地では「ブース」「マップ」「熱中症対策」をすぐ開けるようにしておくと便利です。
+        </p>
       </div>
     </section>
   </div>
