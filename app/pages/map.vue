@@ -47,6 +47,40 @@ const currentLocationAccuracyLabel = computed(() => {
   return `誤差 約${Math.round(currentLocation.value.accuracy)}m`
 })
 
+const currentLocationAccuracyLevel = computed(() => {
+  if (!currentLocation.value) {
+    return 'none'
+  }
+
+  const accuracy = currentLocation.value.accuracy
+
+  if (accuracy <= 30) {
+    return 'good'
+  }
+
+  if (accuracy <= 100) {
+    return 'rough'
+  }
+
+  return 'poor'
+})
+
+const currentLocationAccuracyMessage = computed(() => {
+  if (!currentLocation.value) {
+    return ''
+  }
+
+  if (currentLocationAccuracyLevel.value === 'good') {
+    return '比較的精度の高い現在地です。'
+  }
+
+  if (currentLocationAccuracyLevel.value === 'rough') {
+    return '現在地は少しずれている可能性があります。'
+  }
+
+  return '現在地は大きくずれている可能性があります。目安として利用してください。'
+})
+
 useHead({
   title: '会場マップ・スポット一覧 | ひなたフェス2026 現地ナビ',
   meta: [
@@ -135,6 +169,42 @@ const getCoordinateStatusLabel = (status: 'confirmed' | 'approximate' | 'unknown
 
   return '位置未設定'
 }
+
+const showGeolocationFallback = computed(() => {
+  return geolocationStatus.value === 'error'
+    || geolocationStatus.value === 'unsupported'
+})
+
+const geolocationFallbackTitle = computed(() => {
+  if (geolocationStatus.value === 'unsupported') {
+    return 'この環境では位置情報を利用できません'
+  }
+
+  if (geolocationStatus.value === 'error') {
+    return '現在地を取得できませんでした'
+  }
+
+  return ''
+})
+
+const geolocationFallbackDescription = computed(() => {
+  if (geolocationStatus.value === 'unsupported') {
+    return 'お使いのブラウザ、端末、またはアクセス環境では位置情報が利用できない可能性があります。'
+  }
+
+  if (geolocationStatus.value === 'error') {
+    return '位置情報の許可設定、通信状況、端末のGPS設定などを確認してください。'
+  }
+
+  return ''
+})
+
+const geolocationFallbackTips = [
+  'ブラウザの位置情報許可を確認する',
+  'スマホ本体の位置情報設定をオンにする',
+  '会場ではスポット一覧や公式案内もあわせて確認する',
+  '取得できない場合は、地図上の現在地表示なしで利用する',
+]
 
 const getCoordinateStatusClass = (status: 'confirmed' | 'approximate' | 'unknown') => {
   if (status === 'confirmed') {
@@ -304,7 +374,20 @@ const getCoordinateStatusClass = (status: 'confirmed' | 'approximate' | 'unknown
           class="mt-3 rounded-2xl bg-white px-4 py-3 text-xs leading-6 text-slate-600"
         >
           <p class="font-bold text-slate-700">
-            {{ currentLocationAccuracyLabel }}
+            現在地の目安：{{ currentLocationAccuracyLabel }}
+          </p>
+
+          <p
+            class="mt-1 text-xs leading-6"
+            :class="
+              currentLocationAccuracyLevel === 'good'
+                ? 'text-sky-600'
+                : currentLocationAccuracyLevel === 'rough'
+                  ? 'text-yellow-700'
+                  : 'text-rose-700'
+            "
+          >
+            {{ currentLocationAccuracyMessage }}
           </p>
           <p class="mt-1">
             緯度：{{ currentLocation.latitude.toFixed(6) }} /
@@ -327,6 +410,30 @@ const getCoordinateStatusClass = (status: 'confirmed' | 'approximate' | 'unknown
         </p>
       </div>
 
+      <div
+        v-if="showGeolocationFallback"
+        class="mt-4 rounded-2xl border border-rose-100 bg-rose-50 p-4"
+      >
+        <h3 class="text-sm font-bold text-rose-800">
+          {{ geolocationFallbackTitle }}
+        </h3>
+
+        <p class="mt-2 text-xs leading-6 text-rose-700">
+          {{ geolocationFallbackDescription }}
+        </p>
+
+        <ul class="mt-3 space-y-2">
+          <li
+            v-for="tip in geolocationFallbackTips"
+            :key="tip"
+            class="flex gap-2 text-xs leading-6 text-rose-700"
+          >
+            <span class="mt-1 block size-1.5 shrink-0 rounded-full bg-rose-400" />
+            <span>{{ tip }}</span>
+          </li>
+        </ul>
+      </div>
+
       <div class="mt-4 flex flex-wrap gap-2">
         <span class="rounded-full bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-600">
           座標あり：{{ mappableSpots.length }}件
@@ -340,7 +447,8 @@ const getCoordinateStatusClass = (status: 'confirmed' | 'approximate' | 'unknown
       <div class="mt-4 rounded-2xl bg-slate-50 px-4 py-3">
         <p class="text-xs leading-6 text-slate-500">
           公式マップ画像は使用せず、スポットデータの座標をもとに地図表示します。
-          正式な会場情報が出たら data/spots.ts の座標を更新します。
+          現在地は端末内で取得して表示するだけで、サーバーには保存しません。
+          位置情報が使えない場合でも、スポット一覧はそのまま利用できます。
         </p>
       </div>
     </section>
