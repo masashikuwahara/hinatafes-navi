@@ -17,9 +17,16 @@ export const useGeolocation = () => {
   const location = ref<UserLocation | null>(null)
   const errorMessage = ref('')
   const isSupported = ref(false)
+  const isWatching = ref(false)
+
+  let watchId: number | null = null
 
   onMounted(() => {
-    isSupported.value = 'geolocation' in navigator
+    isSupported.value = import.meta.client && 'geolocation' in navigator
+  })
+
+  onUnmounted(() => {
+    stopWatchingLocation()
   })
 
   const getErrorMessage = (error: GeolocationPositionError) => {
@@ -38,6 +45,17 @@ export const useGeolocation = () => {
     return '現在地の取得中にエラーが発生しました。'
   }
 
+  const setLocationFromPosition = (position: GeolocationPosition) => {
+    location.value = {
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude,
+      accuracy: position.coords.accuracy,
+      timestamp: position.timestamp,
+    }
+
+    status.value = 'success'
+  }
+
   const getCurrentLocation = () => {
     errorMessage.value = ''
 
@@ -51,14 +69,7 @@ export const useGeolocation = () => {
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        location.value = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy,
-          timestamp: position.timestamp,
-        }
-
-        status.value = 'success'
+        setLocationFromPosition(position)
       },
       (error) => {
         status.value = 'error'
@@ -68,11 +79,59 @@ export const useGeolocation = () => {
         enableHighAccuracy: true,
         timeout: 15000,
         maximumAge: 0,
-      }
+      },
     )
   }
 
+  const startWatchingLocation = () => {
+    errorMessage.value = ''
+
+    if (!import.meta.client || !isSupported.value) {
+      status.value = 'unsupported'
+      errorMessage.value = 'このブラウザでは位置情報を利用できません。'
+      return
+    }
+
+    if (watchId !== null) {
+      return
+    }
+
+    status.value = 'loading'
+    isWatching.value = true
+
+    watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        setLocationFromPosition(position)
+      },
+      (error) => {
+        status.value = 'error'
+        errorMessage.value = getErrorMessage(error)
+        stopWatchingLocation()
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 5000,
+      },
+    )
+  }
+
+  const stopWatchingLocation = () => {
+    if (!import.meta.client) {
+      return
+    }
+
+    if (watchId !== null) {
+      navigator.geolocation.clearWatch(watchId)
+      watchId = null
+    }
+
+    isWatching.value = false
+  }
+
   const clearLocation = () => {
+    stopWatchingLocation()
+
     location.value = null
     errorMessage.value = ''
     status.value = 'idle'
@@ -83,7 +142,10 @@ export const useGeolocation = () => {
     location,
     errorMessage,
     isSupported,
+    isWatching,
     getCurrentLocation,
+    startWatchingLocation,
+    stopWatchingLocation,
     clearLocation,
   }
 }

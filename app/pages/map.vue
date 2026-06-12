@@ -15,9 +15,40 @@ const {
   location: currentLocation,
   errorMessage: geolocationErrorMessage,
   isSupported: isGeolocationSupported,
+  isWatching: isGeolocationWatching,
   getCurrentLocation,
+  startWatchingLocation,
+  stopWatchingLocation,
   clearLocation,
 } = useGeolocation()
+
+const shouldFollowCurrentLocation = ref(true)
+
+const handleGetCurrentLocation = () => {
+  shouldFollowCurrentLocation.value = true
+  getCurrentLocation()
+}
+
+const handleStartFollowingLocation = () => {
+  shouldFollowCurrentLocation.value = true
+  startWatchingLocation()
+}
+
+const handleStopFollowingLocation = () => {
+  shouldFollowCurrentLocation.value = false
+  stopWatchingLocation()
+}
+
+const handleMapMovedByUser = () => {
+  if (shouldFollowCurrentLocation.value) {
+    shouldFollowCurrentLocation.value = false
+  }
+}
+
+const handleClearLocation = () => {
+  shouldFollowCurrentLocation.value = false
+  clearLocation()
+}
 
 const geolocationStatusLabel = computed(() => {
   if (geolocationStatus.value === 'loading') {
@@ -220,60 +251,23 @@ const getCoordinateStatusClass = (status: 'confirmed' | 'approximate' | 'unknown
 </script>
 
 <template>
-  <main class="mx-auto max-w-3xl px-4 pb-24 pt-6">
+  <div class="app-container space-y-6 pb-8 pt-4">
     <!-- ページ見出し -->
-    <section class="rounded-3xl bg-gradient-to-br from-sky-100 via-white to-yellow-50 p-5 shadow-sm">
-      <p class="text-xs font-bold uppercase tracking-[0.25em] text-sky-500">
+    <section
+      class="overflow-hidden rounded-card border border-hinata-border bg-gradient-to-br from-hinata-sky-soft via-white to-hinata-yellow-soft p-5 shadow-card"
+    >
+      <p class="text-xs font-bold uppercase tracking-[0.25em] text-hinata-sky">
         MAP
       </p>
 
-      <h1 class="mt-2 text-2xl font-bold text-slate-900">
+      <h1 class="mt-2 text-2xl font-bold text-hinata-navy">
         会場マップ・スポット一覧
       </h1>
 
-      <p class="mt-3 text-sm leading-7 text-slate-600">
+      <p class="mt-3 text-sm leading-7 text-hinata-muted">
         入口、グッズ、飲食、休憩、給水、トイレ、救護など、現地で確認したいスポットをまとめます。
-        位置情報や地図表示は今後追加予定です。
+        現在地を取得すると、地図上で自分の位置も確認できます。
       </p>
-    </section>
-
-    <!-- 重要スポット -->
-    <section class="mt-6">
-      <div class="flex items-center justify-between gap-3">
-        <div>
-          <h2 class="text-lg font-bold text-slate-900">
-            まず確認したい場所
-          </h2>
-          <p class="mt-1 text-xs text-slate-500">
-            入口・休憩・給水・救護など、当日使う可能性が高いスポットです。
-          </p>
-        </div>
-      </div>
-
-      <div class="mt-3 flex gap-3 overflow-x-auto pb-2">
-        <article
-          v-for="spot in importantSpots"
-          :key="spot.id"
-          class="min-w-[220px] rounded-2xl border border-sky-100 bg-white p-4 shadow-sm"
-        >
-          <div class="flex items-center gap-2">
-            <span class="text-xl">
-              {{ getSpotCategory(spot.category)?.icon }}
-            </span>
-            <span class="rounded-full bg-sky-50 px-2.5 py-1 text-xs font-bold text-sky-600">
-              {{ getSpotCategory(spot.category)?.label }}
-            </span>
-          </div>
-
-          <h3 class="mt-3 text-sm font-bold leading-6 text-slate-900">
-            {{ spot.name }}
-          </h3>
-
-          <p class="mt-2 line-clamp-3 text-xs leading-6 text-slate-600">
-            {{ spot.description }}
-          </p>
-        </article>
-      </div>
     </section>
 
     <!-- 簡易マップ -->
@@ -298,16 +292,18 @@ const getCoordinateStatusClass = (status: 'confirmed' | 'approximate' | 'unknown
           <SpotLeafletMap
             :spots="filteredSpots"
             :current-location="currentLocation"
+            :follow-current-location="shouldFollowCurrentLocation"
+            @user-moved-map="handleMapMovedByUser"
           />
 
           <template #fallback>
-            <div class="grid min-h-[280px] place-items-center rounded-3xl border border-dashed border-sky-200 bg-sky-50 p-6 text-center">
+            <div class="grid min-h-[280px] place-items-center rounded-card border border-dashed border-hinata-border bg-hinata-sky-soft p-6 text-center">
               <div>
-                <div class="mx-auto flex size-16 items-center justify-center rounded-3xl bg-white text-3xl shadow-sm">
+                <div class="mx-auto flex size-16 items-center justify-center rounded-card bg-white text-3xl shadow-soft">
                   🗺️
                 </div>
 
-                <p class="mt-4 text-sm font-bold text-slate-700">
+                <p class="mt-4 text-sm font-bold text-hinata-navy">
                   地図を読み込み中です
                 </p>
               </div>
@@ -344,30 +340,55 @@ const getCoordinateStatusClass = (status: 'confirmed' | 'approximate' | 'unknown
           </span>
         </div>
 
-        <div class="mt-4 flex flex-col gap-2 sm:flex-row">
+        <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
           <button
             type="button"
-            class="rounded-2xl bg-sky-500 px-4 py-3 text-sm font-bold text-white shadow-sm disabled:cursor-not-allowed disabled:bg-slate-300"
+            class="app-button-primary disabled:cursor-not-allowed disabled:bg-slate-300"
             :disabled="geolocationStatus === 'loading' || !isGeolocationSupported"
-            @click="getCurrentLocation"
+            @click="handleGetCurrentLocation"
           >
             <span v-if="geolocationStatus === 'loading'">
               取得中...
             </span>
             <span v-else>
-              現在地を取得する
+              現在地へ移動
+            </span>
+          </button>
+
+          <button
+            v-if="isGeolocationSupported"
+            type="button"
+            class="app-button-secondary"
+            :disabled="geolocationStatus === 'loading'"
+            @click="isGeolocationWatching ? handleStopFollowingLocation() : handleStartFollowingLocation()"
+          >
+            <span v-if="isGeolocationWatching">
+              追従を停止
+            </span>
+            <span v-else>
+              現在地に追従
             </span>
           </button>
 
           <button
             v-if="currentLocation"
             type="button"
-            class="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-600"
-            @click="clearLocation"
+            class="app-button-secondary"
+            @click="handleClearLocation"
           >
             現在地を消す
           </button>
         </div>
+
+        <p
+          v-if="currentLocation"
+          class="mt-2 text-xs font-bold"
+          :class="shouldFollowCurrentLocation && isGeolocationWatching
+            ? 'text-hinata-sky'
+            : 'text-hinata-muted'"
+        >
+          {{ shouldFollowCurrentLocation && isGeolocationWatching ? '現在地に追従中' : '地図を自由に操作できます' }}
+        </p>
 
         <div
           v-if="currentLocation"
@@ -450,6 +471,45 @@ const getCoordinateStatusClass = (status: 'confirmed' | 'approximate' | 'unknown
           現在地は端末内で取得して表示するだけで、サーバーには保存しません。
           位置情報が使えない場合でも、スポット一覧はそのまま利用できます。
         </p>
+      </div>
+    </section>
+
+    <!-- 重要スポット -->
+    <section class="mt-6">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900">
+            まず確認したい場所
+          </h2>
+          <p class="mt-1 text-xs text-slate-500">
+            入口・休憩・給水・救護など、当日使う可能性が高いスポットです。
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-3 flex gap-3 overflow-x-auto pb-2">
+        <article
+          v-for="spot in importantSpots"
+          :key="spot.id"
+          class="min-w-[220px] rounded-2xl border border-sky-100 bg-white p-4 shadow-sm"
+        >
+          <div class="flex items-center gap-2">
+            <span class="text-xl">
+              {{ getSpotCategory(spot.category)?.icon }}
+            </span>
+            <span class="rounded-full bg-sky-50 px-2.5 py-1 text-xs font-bold text-sky-600">
+              {{ getSpotCategory(spot.category)?.label }}
+            </span>
+          </div>
+
+          <h3 class="mt-3 text-sm font-bold leading-6 text-slate-900">
+            {{ spot.name }}
+          </h3>
+
+          <p class="mt-2 line-clamp-3 text-xs leading-6 text-slate-600">
+            {{ spot.description }}
+          </p>
+        </article>
       </div>
     </section>
 
@@ -685,5 +745,5 @@ const getCoordinateStatusClass = (status: 'confirmed' | 'approximate' | 'unknown
         公式マップ画像の無断転載は避け、必要に応じて公式サイトへのリンクで案内します。
       </p>
     </section>
-  </main>
+  </div>
 </template>
