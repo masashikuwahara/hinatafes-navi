@@ -45,21 +45,31 @@ const isActive = (to: string) => {
 </script>
 
 <template>
-  <nav class="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
-    <div class="grid grid-cols-5 rounded-3xl border border-white/80 bg-white/90 p-2 shadow-[0_-10px_30px_rgba(15,23,42,0.12)] backdrop-blur">
+  <nav
+    class="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-screen-sm px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)]"
+    aria-label="下部ナビゲーション"
+  >
+    <div
+      class="grid grid-cols-5 rounded-card border border-hinata-border bg-white/95 p-2 shadow-card backdrop-blur"
+    >
       <NuxtLink
         v-for="item in navItems"
         :key="item.to"
         :to="item.to"
-        class="flex flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-xs font-bold transition"
+        class="flex min-h-14 flex-col items-center justify-center gap-1 rounded-button px-1.5 py-2 text-xs font-bold transition active:scale-[0.97]"
         :class="isActive(item.to)
-          ? 'bg-sky-100 text-sky-700'
-          : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'"
+          ? 'bg-hinata-sky-soft text-hinata-navy'
+          : 'text-hinata-muted hover:bg-hinata-sky-pale hover:text-hinata-navy'"
+        :aria-current="isActive(item.to) ? 'page' : undefined"
       >
-        <span class="text-lg leading-none">
+        <span
+          class="flex h-6 items-center justify-center text-lg leading-none"
+          aria-hidden="true"
+        >
           {{ item.icon }}
         </span>
-        <span>
+
+        <span class="leading-none">
           {{ item.label }}
         </span>
       </NuxtLink>
