@@ -13,46 +13,46 @@ withDefaults(
 
 const themeClasses = {
   sky: {
-    card: 'border-sky-100 bg-sky-50/80 hover:border-sky-300 hover:bg-sky-50',
-    icon: 'bg-sky-100 text-sky-700',
-    badge: 'bg-sky-100 text-sky-700',
-    arrow: 'text-sky-500',
+    card: 'border-hinata-border bg-white hover:border-hinata-sky/60 hover:bg-hinata-sky-pale',
+    icon: 'bg-hinata-sky-soft text-hinata-navy',
+    badge: 'bg-hinata-sky-soft text-hinata-navy',
+    arrow: 'text-hinata-sky',
   },
   yellow: {
-    card: 'border-yellow-100 bg-yellow-50/80 hover:border-yellow-300 hover:bg-yellow-50',
-    icon: 'bg-yellow-100 text-yellow-700',
-    badge: 'bg-yellow-100 text-yellow-700',
-    arrow: 'text-yellow-600',
+    card: 'border-hinata-yellow/60 bg-white hover:border-hinata-yellow hover:bg-hinata-yellow-soft',
+    icon: 'bg-hinata-yellow-soft text-hinata-navy',
+    badge: 'bg-hinata-yellow-soft text-hinata-navy',
+    arrow: 'text-hinata-navy',
   },
   green: {
-    card: 'border-emerald-100 bg-emerald-50/80 hover:border-emerald-300 hover:bg-emerald-50',
-    icon: 'bg-emerald-100 text-emerald-700',
-    badge: 'bg-emerald-100 text-emerald-700',
-    arrow: 'text-emerald-500',
+    card: 'border-hinata-green/40 bg-white hover:border-hinata-green hover:bg-hinata-green/10',
+    icon: 'bg-hinata-green/15 text-hinata-navy',
+    badge: 'bg-hinata-green/15 text-hinata-navy',
+    arrow: 'text-hinata-green',
   },
   orange: {
-    card: 'border-orange-100 bg-orange-50/80 hover:border-orange-300 hover:bg-orange-50',
-    icon: 'bg-orange-100 text-orange-700',
-    badge: 'bg-orange-100 text-orange-700',
-    arrow: 'text-orange-500',
+    card: 'border-hinata-orange/40 bg-white hover:border-hinata-orange hover:bg-hinata-orange/10',
+    icon: 'bg-hinata-orange/15 text-hinata-navy',
+    badge: 'bg-hinata-orange/15 text-hinata-navy',
+    arrow: 'text-hinata-orange',
   },
   pink: {
-    card: 'border-pink-100 bg-pink-50/80 hover:border-pink-300 hover:bg-pink-50',
-    icon: 'bg-pink-100 text-pink-700',
-    badge: 'bg-pink-100 text-pink-700',
-    arrow: 'text-pink-500',
+    card: 'border-hinata-pink/40 bg-white hover:border-hinata-pink hover:bg-hinata-pink/10',
+    icon: 'bg-hinata-pink/15 text-hinata-navy',
+    badge: 'bg-hinata-pink/15 text-hinata-navy',
+    arrow: 'text-hinata-pink',
   },
   purple: {
-    card: 'border-purple-100 bg-purple-50/80 hover:border-purple-300 hover:bg-purple-50',
-    icon: 'bg-purple-100 text-purple-700',
-    badge: 'bg-purple-100 text-purple-700',
-    arrow: 'text-purple-500',
+    card: 'border-hinata-purple/40 bg-white hover:border-hinata-purple hover:bg-hinata-purple/10',
+    icon: 'bg-hinata-purple/15 text-hinata-navy',
+    badge: 'bg-hinata-purple/15 text-hinata-navy',
+    arrow: 'text-hinata-purple',
   },
   slate: {
-    card: 'border-slate-100 bg-slate-50/80 hover:border-slate-300 hover:bg-slate-50',
-    icon: 'bg-slate-100 text-slate-700',
-    badge: 'bg-slate-100 text-slate-700',
-    arrow: 'text-slate-500',
+    card: 'border-hinata-border bg-white hover:border-hinata-sky/50 hover:bg-hinata-sky-pale',
+    icon: 'bg-hinata-sky-pale text-hinata-navy',
+    badge: 'bg-hinata-sky-pale text-hinata-navy',
+    arrow: 'text-hinata-muted',
   },
 } satisfies Record<
   FeatureTheme,
@@ -68,7 +68,7 @@ const themeClasses = {
 <template>
   <NuxtLink
     :to="feature.to"
-    class="group flex h-full flex-col justify-between rounded-2xl border shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md"
+    class="group flex h-full flex-col justify-between rounded-card border shadow-soft transition duration-200 active:scale-[0.98]"
     :class="[
       themeClasses[feature.theme].card,
       compact ? 'p-4' : 'p-5',
@@ -77,15 +77,16 @@ const themeClasses = {
     <div>
       <div class="mb-3 flex items-start justify-between gap-3">
         <div
-          class="flex size-11 items-center justify-center rounded-2xl text-xl"
+          class="flex size-11 shrink-0 items-center justify-center rounded-button text-xl"
           :class="themeClasses[feature.theme].icon"
+          aria-hidden="true"
         >
           {{ feature.icon }}
         </div>
 
         <span
           v-if="feature.isTodayUse"
-          class="rounded-full px-2.5 py-1 text-xs font-bold"
+          class="shrink-0 rounded-full px-2.5 py-1 text-xs font-bold"
           :class="themeClasses[feature.theme].badge"
         >
           今日使う
@@ -93,14 +94,14 @@ const themeClasses = {
       </div>
 
       <h3
-        class="font-bold leading-snug text-slate-900"
+        class="font-bold leading-snug text-hinata-navy"
         :class="compact ? 'text-base' : 'text-lg'"
       >
         {{ feature.title }}
       </h3>
 
       <p
-        class="mt-2 leading-relaxed text-slate-600"
+        class="mt-2 leading-relaxed text-hinata-muted"
         :class="compact ? 'text-xs' : 'text-sm'"
       >
         {{ feature.description }}
