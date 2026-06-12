@@ -1,8 +1,8 @@
 <template>
-  <div class="hf-app-shell">
+  <div class="min-h-screen bg-hinata-sky-pale text-hinata-text">
     <AppHeader />
 
-    <main class="hf-page">
+    <main class="app-page">
       <slot />
     </main>
 
