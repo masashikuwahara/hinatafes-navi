@@ -108,13 +108,13 @@ const themeClasses = {
       </p>
     </div>
 
-    <div class="mt-4 flex items-center justify-end text-sm font-bold">
+    <!-- <div class="mt-4 flex items-center justify-end text-sm font-bold">
       <span
         class="transition group-hover:translate-x-1"
         :class="themeClasses[feature.theme].arrow"
       >
         開く →
       </span>
-    </div>
+    </div> -->
   </NuxtLink>
 </template>
