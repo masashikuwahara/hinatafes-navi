@@ -6,15 +6,11 @@ import {
   type BoothGenre,
 } from '~/data/booths'
 
-useHead({
-  title: '出店・ブース一覧 | ひなたフェス2026 現地ナビ',
-  meta: [
-    {
-      name: 'description',
-      content:
-        'ひなたフェス2026の出店・ブース情報をジャンルやエリア別に確認できます。お気に入り保存にも対応しています。',
-    },
-  ],
+useAppSeo({
+  title: '出店・ブース一覧',
+  description:
+    'ひなたフェス2026の出店・ブース情報を確認できるページです。ジャンルや場所、お気に入りを使って、現地で回りたいブースをスマホで整理できます。',
+  path: '/booths',
 })
 
 const selectedGenre = ref<BoothGenre | 'all'>('all')

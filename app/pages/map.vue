@@ -112,15 +112,11 @@ const currentLocationAccuracyMessage = computed(() => {
   return '現在地は大きくずれている可能性があります。目安として利用してください。'
 })
 
-useHead({
-  title: '会場マップ・スポット一覧 | ひなたフェス2026 現地ナビ',
-  meta: [
-    {
-      name: 'description',
-      content:
-        'ひなたフェス2026の会場内スポット、入口、グッズ、飲食、休憩、給水、トイレ、救護などを確認できるページです。',
-    },
-  ],
+useAppSeo({
+  title: '会場マップ・現在地確認',
+  description:
+    'ひなたフェス2026の会場周辺スポットを確認できる現地マップです。スポット一覧、現在地確認、目的地の把握など、現地移動をサポートします。',
+  path: '/map',
 })
 
 const selectedCategory = ref<SpotCategory | 'all'>('all')

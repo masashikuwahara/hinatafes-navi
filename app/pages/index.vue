@@ -4,19 +4,7 @@ import {
   todayFeatures,
 } from '~/data/homeFeatures'
 
-useHead({
-  title: 'ひなたフェス2026 現地ナビ',
-  meta: [
-    {
-      name: 'description',
-      content:
-        'ひなたフェス2026の現地参加時に使いやすい、非公式ファン向けナビアプリです。持ち物、スケジュール、ブース、マップ、熱中症対策などをまとめます。',
-    },
-  ],
-})
-
-// const festivalTargetDate = new Date('2026-09-01T00:00:00+09:00')
-// const festivalTargetLabel = '2026年9月1日 00:00（仮）'
+useAppSeo()
 
 const festivalStartDate = new Date('2026-09-01T00:00:00+09:00')
 const festivalEndDate = new Date('2026-09-01T23:59:59+09:00')
@@ -118,14 +106,6 @@ const totalDays = computed(() => {
 const formatTwoDigits = (value: number) => {
   return String(value).padStart(2, '0')
 }
-
-// onMounted(() => {
-//   now.value = new Date()
-
-//   timer = setInterval(() => {
-//     now.value = new Date()
-//   }, 1000)
-// })
 
 onUnmounted(() => {
   if (timer) {

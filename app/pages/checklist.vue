@@ -5,15 +5,11 @@ import {
   type ChecklistItem,
 } from '~/data/checklistItems'
 
-useHead({
-  title: '持ち物チェックリスト | ひなたフェス2026 現地ナビ',
-  meta: [
-    {
-      name: 'description',
-      content:
-        'ひなたフェス2026に向けた持ち物チェックリストです。チェック状態は端末に保存されます。',
-    },
-  ],
+useAppSeo({
+  title: '持ち物チェックリスト',
+  description:
+    'ひなたフェス2026参加前に確認したい持ち物チェックリストです。チケット、スマートフォン、モバイルバッテリー、暑さ対策グッズ、雨具、身分証などを出発前に確認できます。',
+  path: '/checklist',
 })
 
 const { value: checkedItemIds, reset } = useLocalStorage<string[]>(

@@ -2,15 +2,11 @@
 import { computed, ref } from 'vue'
 import { scheduleItems, type ScheduleCategory } from '~/data/schedule'
 
-useHead({
-  title: 'スケジュール | ひなたフェス2026 現地ナビ',
-  meta: [
-    {
-      name: 'description',
-      content:
-        'ひなたフェス2026のイベントスケジュールを日付別・カテゴリ別に確認できます。',
-    },
-  ],
+useAppSeo({
+  title: 'スケジュール確認',
+  description:
+    'ひなたフェス2026のスケジュールをスマホで確認できるページです。イベント当日の予定や時間帯ごとの行動メモを現地で見やすく整理します。',
+  path: '/schedule',
 })
 
 const selectedDate = ref<string>('all')

@@ -8,15 +8,11 @@ import {
   type HeatInfoItem,
 } from '~/data/heat'
 
-useHead({
-  title: '熱中症対策 | ひなたフェス2026 現地ナビ',
-  meta: [
-    {
-      name: 'description',
-      content:
-        'ひなたフェス2026の現地参加時に確認したい熱中症対策、水分補給、休憩、危険サイン、応急対応をまとめたページです。',
-    },
-  ],
+useAppSeo({
+  title: '熱中症対策',
+  description:
+    'ひなたフェス2026の宮崎遠征・屋外イベント参加時に確認したい熱中症対策メモです。水分補給、休憩、暑さ対策グッズなどをスマホで確認できます。',
+  path: '/heat',
 })
 
 const getPriorityClass = (item: HeatInfoItem) => {

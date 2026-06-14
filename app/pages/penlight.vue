@@ -6,15 +6,11 @@ import {
   type PenlightColorKey,
 } from '~/data/penlights'
 
-useHead({
-  title: 'ペンライトカラー | ひなたフェス2026 現地ナビ',
-  meta: [
-    {
-      name: 'description',
-      content:
-        '日向坂46メンバーのペンライトカラーを一覧で確認できます。ひなたフェス2026現地での確認用ページです。',
-    },
-  ],
+useAppSeo({
+  title: 'ペンライトカラー確認',
+  description:
+    'ひなたフェス2026の現地で確認しやすいペンライトカラー確認ページです。日向坂46メンバーのペンライトカラーをスマホで素早く確認できます。',
+  path: '/penlight',
 })
 
 const getColor = (key: PenlightColorKey) => {

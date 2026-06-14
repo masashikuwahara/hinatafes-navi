@@ -27,15 +27,12 @@ const defaultMemo: VisitMemo = {
   updatedAt: null,
 }
 
-useHead({
-  title: '参戦メモ | ひなたフェス2026 現地ナビ',
-  meta: [
-    {
-      name: 'description',
-      content:
-        'ひなたフェス2026の座席、集合場所、買ったもの、帰りの交通、感想などを端末に保存できる参戦メモです。',
-    },
-  ],
+useAppSeo({
+  title: '参戦メモ',
+  description:
+    'ひなたフェス2026の座席、集合場所、買ったもの、感想などを端末内に保存できる個人用メモです。',
+  path: '/memo',
+  noindex: true,
 })
 
 const { value: memo, isReady, reset } = useLocalStorage<VisitMemo>(
