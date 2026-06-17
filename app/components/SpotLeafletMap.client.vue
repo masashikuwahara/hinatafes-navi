@@ -11,10 +11,16 @@ type MappableSpot = Spot & {
   longitude: number
 }
 
+type CurrentLocation = UserLocation & {
+  updatedAt?: string
+}
+
 const props = defineProps<{
   spots: Spot[]
-  currentLocation?: UserLocation | null
-  followCurrentLocation?: boolean
+  currentLocation: CurrentLocation | null
+  selectedSpotId?: string | null
+  shouldFollowCurrentLocation?: boolean
+  followRequestKey?: number
 }>()
 
 const emit = defineEmits<{
@@ -59,6 +65,35 @@ const runProgrammaticMove = (callback: () => void) => {
   window.setTimeout(() => {
     isProgrammaticMove = false
   }, 400)
+}
+
+const centerToCurrentLocation = () => {
+  if (!map || !currentLocation.value) {
+    return
+  }
+
+  const latLng: [number, number] = [
+    currentLocation.value.latitude,
+    currentLocation.value.longitude,
+  ]
+
+  runProgrammaticMove(() => {
+    requestAnimationFrame(() => {
+      if (!map) {
+        return
+      }
+
+      map.invalidateSize()
+
+      map.setView(
+        latLng,
+        Math.max(map.getZoom(), 17),
+        {
+          animate: true,
+        },
+      )
+    })
+  })
 }
 
 const getInitialLatLng = (): [number, number] => {
@@ -250,17 +285,16 @@ const updateCurrentLocationMarker = () => {
       .addTo(map)
   }
 
-  if (props.followCurrentLocation) {
-    runProgrammaticMove(() => {
-      map?.panTo(latLng, {
-        animate: true,
-        duration: 0.5,
-      })
-    })
+  if (props.shouldFollowCurrentLocation) {
+    centerToCurrentLocation()
   }
 }
 
 const fitMapToVisibleItems = () => {
+  if (props.shouldFollowCurrentLocation) {
+    return
+  }
+
   if (!map || !leaflet) {
     return
   }
@@ -352,6 +386,10 @@ const buildMapOnce = async () => {
 
   requestAnimationFrame(() => {
     map?.invalidateSize()
+
+    if (props.shouldFollowCurrentLocation) {
+      centerToCurrentLocation()
+    }
   })
 }
 
@@ -403,30 +441,46 @@ watch(
 
     await buildMapOnce()
     updateCurrentLocationMarker()
+
+    if (props.shouldFollowCurrentLocation) {
+      centerToCurrentLocation()
+    }
   },
   {
     deep: true,
+    flush: 'post',
   },
 )
 
 watch(
-  () => props.followCurrentLocation,
-  (shouldFollow) => {
-    if (!shouldFollow || !map || !currentLocation.value) {
+  () => props.shouldFollowCurrentLocation,
+  async (shouldFollow) => {
+    if (!shouldFollow) {
       return
     }
 
-    const latLng: [number, number] = [
-      currentLocation.value.latitude,
-      currentLocation.value.longitude,
-    ]
+    await buildMapOnce()
+    updateCurrentLocationMarker()
+    centerToCurrentLocation()
+  },
+  {
+    flush: 'post',
+  },
+)
 
-    runProgrammaticMove(() => {
-      map?.panTo(latLng, {
-        animate: true,
-        duration: 0.5,
-      })
-    })
+watch(
+  () => props.followRequestKey,
+  async () => {
+    if (!props.shouldFollowCurrentLocation) {
+      return
+    }
+
+    await buildMapOnce()
+    updateCurrentLocationMarker()
+    centerToCurrentLocation()
+  },
+  {
+    flush: 'post',
   },
 )
 
