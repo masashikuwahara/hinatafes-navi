@@ -39,7 +39,7 @@ export const useAppSeo = (options: UseAppSeoOptions = {}) => {
     ogUrl: canonicalUrl,
     ogSiteName: siteName,
     ogLocale: 'ja_JP',
-    ogImage,
+    ogImage: ogImage,
     ogImageWidth: 1200,
     ogImageHeight: 630,
     ogImageAlt:
