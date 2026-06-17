@@ -46,119 +46,201 @@ const membersByGeneration = computed(() => {
 </script>
 
 <template>
-  <main class="mx-auto max-w-3xl px-4 pb-24 pt-6">
-    <section class="rounded-3xl bg-gradient-to-br from-sky-100 via-white to-yellow-50 p-5 shadow-sm">
-      <p class="text-sm font-bold text-sky-600">
-        Penlight
-      </p>
+  <main class="min-h-screen bg-[#f7fbfc] pb-24 text-slate-900">
+    <div class="mx-auto max-w-md px-4 py-4">
+      <!-- ヘッダー -->
+      <section class="border-b-4 border-sky-400 pb-3">
+        <p class="text-xs font-black tracking-[0.16em] text-sky-700">
+          PENLIGHT COLOR
+        </p>
 
-      <h1 class="mt-2 text-2xl font-bold text-slate-900">
-        ペンライトカラー
-      </h1>
+        <div class="mt-1 flex items-end justify-between gap-3">
+          <div>
+            <h1 class="text-[1.35rem] font-black leading-tight">
+              ペンライトカラー
+            </h1>
+            <p class="mt-1 text-sm font-medium leading-snug text-slate-700">
+              期別に、メンバーの2色をすぐ確認できます。
+            </p>
+          </div>
 
-      <p class="mt-3 text-sm leading-7 text-slate-600">
-        日向坂46メンバーのペンライトカラーを一覧で確認できます。
-        現地で素早く見られるように、シンプルな表示にしています。
-      </p>
-    </section>
+          <NuxtLink
+            to="/"
+            class="shrink-0 border-2 border-slate-800 bg-white px-2 py-1 text-xs font-black active:bg-slate-100"
+          >
+            TOP
+          </NuxtLink>
+        </div>
+      </section>
 
-    <section class="mt-6 rounded-3xl border border-yellow-100 bg-yellow-50 p-4">
-      <h2 class="text-sm font-bold text-yellow-800">
-        データについて
-      </h2>
+      <!-- 概要 -->
+      <section class="sticky top-0 z-20 -mx-4 mt-3 border-y-2 border-slate-800 bg-white px-4 py-3">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <p class="text-xs font-black text-slate-500">
+              登録メンバー
+            </p>
+            <p class="mt-0.5 text-xl font-black leading-none">
+              全{{ penlightMembers.length }}名
+            </p>
+          </div>
 
-      <p class="mt-2 text-xs leading-6 text-yellow-800">
-        現在はサンプルデータです。後で既存のHINACOLORまたは公式情報をもとに、現役メンバー分へ差し替えてください。
-      </p>
-    </section>
+          <div class="text-right">
+            <p class="text-xs font-black text-slate-500">
+              表示
+            </p>
+            <p class="mt-0.5 text-xl font-black leading-none text-sky-700">
+              期別
+            </p>
+          </div>
+        </div>
 
-    <section class="mt-6">
-      <div class="flex items-end justify-between">
-        <div>
-          <h2 class="text-lg font-bold text-slate-900">
-            メンバー別カラー一覧
-          </h2>
-
-          <p class="mt-1 text-xs text-slate-500">
-            全{{ penlightMembers.length }}名
+        <div class="mt-3 border-l-4 border-sky-500 bg-sky-50 px-2 py-2">
+          <p class="text-xs font-bold leading-relaxed text-sky-950">
+            ライブ前に推しメンの色を確認。色名と色見本をセットで表示しています。
           </p>
         </div>
-      </div>
+      </section>
 
-      <div class="mt-4 space-y-5">
-        <section
-          v-for="group in membersByGeneration"
-          :key="group.generation"
-          class="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm"
-        >
-          <div class="bg-sky-50 px-4 py-3">
-            <h3 class="text-sm font-bold text-sky-700">
-              {{ group.generation }}
-            </h3>
-          </div>
-
+      <!-- 期別カラー一覧 -->
+      <section class="mt-5">
+        <div class="mb-2 flex items-end justify-between gap-3">
           <div>
-            <article
-              v-for="member in group.members"
-              :key="member.id"
-              class="border-b border-slate-100 p-4 last:border-b-0"
-            >
-              <div class="flex items-center justify-between gap-3">
-                <div class="min-w-0">
-                  <h4 class="truncate text-base font-bold text-slate-900">
-                    {{ member.name }}
-                  </h4>
-                </div>
-
-                <div class="flex shrink-0 items-center gap-2">
-                  <span
-                    class="h-7 w-7 rounded-full border border-slate-200 shadow-sm"
-                    :style="getColorStyle(member.color1)"
-                    :title="getColorName(member.color1)"
-                  />
-
-                  <span
-                    class="h-7 w-7 rounded-full border border-slate-200 shadow-sm"
-                    :style="getColorStyle(member.color2)"
-                    :title="getColorName(member.color2)"
-                  />
-                </div>
-              </div>
-
-              <div class="mt-3 grid grid-cols-2 gap-2">
-                <div class="flex items-center gap-2 rounded-2xl bg-slate-50 px-3 py-2">
-                  <span
-                    class="h-4 w-4 shrink-0 rounded-full border border-slate-200"
-                    :style="getColorStyle(member.color1)"
-                  />
-
-                  <span class="truncate text-xs font-bold text-slate-700">
-                    {{ getColorName(member.color1) }}
-                  </span>
-                </div>
-
-                <div class="flex items-center gap-2 rounded-2xl bg-slate-50 px-3 py-2">
-                  <span
-                    class="h-4 w-4 shrink-0 rounded-full border border-slate-200"
-                    :style="getColorStyle(member.color2)"
-                  />
-
-                  <span class="truncate text-xs font-bold text-slate-700">
-                    {{ getColorName(member.color2) }}
-                  </span>
-                </div>
-              </div>
-
-              <p
-                v-if="member.memo"
-                class="mt-3 rounded-2xl bg-sky-50 px-3 py-2 text-xs leading-6 text-sky-700"
-              >
-                {{ member.memo }}
-              </p>
-            </article>
+            <h2 class="text-base font-black">
+              メンバー別カラー一覧
+            </h2>
+            <p class="mt-0.5 text-xs font-bold text-slate-500">
+              二期生・三期生・四期生・五期生別
+            </p>
           </div>
-        </section>
-      </div>
-    </section>
+        </div>
+
+        <div class="space-y-5">
+          <section
+            v-for="group in membersByGeneration"
+            :key="group.generation"
+            class="border-y-2 border-slate-800 bg-white"
+          >
+            <div class="flex items-center justify-between border-b-2 border-slate-800 bg-sky-50 px-3 py-2">
+              <h3 class="text-base font-black text-sky-950">
+                {{ group.generation }}
+              </h3>
+
+              <p class="text-xs font-black text-sky-800">
+                {{ group.members.length }}名
+              </p>
+            </div>
+
+            <div>
+              <article
+                v-for="member in group.members"
+                :key="member.id"
+                class="border-b border-dashed border-slate-300 px-3 py-3 last:border-b-0"
+              >
+                <div class="flex items-start justify-between gap-3">
+                  <div class="min-w-0 flex-1">
+                    <h4 class="truncate text-base font-black leading-snug text-slate-950">
+                      {{ member.name }}
+                    </h4>
+
+                    <div class="mt-2 grid grid-cols-2 gap-2">
+                      <div class="border border-slate-300 bg-[#fffdf7] px-2 py-2">
+                        <p class="text-[10px] font-black text-slate-500">
+                          1色目
+                        </p>
+
+                        <div class="mt-1 flex items-center gap-2">
+                          <span
+                            class="h-6 w-4 shrink-0 border-2 border-slate-700"
+                            :style="getColorStyle(member.color1)"
+                            :title="getColorName(member.color1)"
+                          />
+
+                          <span class="min-w-0 truncate text-xs font-black text-slate-800">
+                            {{ getColorName(member.color1) }}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div class="border border-slate-300 bg-[#fffdf7] px-2 py-2">
+                        <p class="text-[10px] font-black text-slate-500">
+                          2色目
+                        </p>
+
+                        <div class="mt-1 flex items-center gap-2">
+                          <span
+                            class="h-6 w-4 shrink-0 border-2 border-slate-700"
+                            :style="getColorStyle(member.color2)"
+                            :title="getColorName(member.color2)"
+                          />
+
+                          <span class="min-w-0 truncate text-xs font-black text-slate-800">
+                            {{ getColorName(member.color2) }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flex shrink-0 items-center gap-1.5 pt-1">
+                    <span
+                      class="h-10 w-5 border-2 border-slate-800"
+                      :style="getColorStyle(member.color1)"
+                      :title="getColorName(member.color1)"
+                    />
+
+                    <span
+                      class="h-10 w-5 border-2 border-slate-800"
+                      :style="getColorStyle(member.color2)"
+                      :title="getColorName(member.color2)"
+                    />
+                  </div>
+                </div>
+
+                <p
+                  v-if="member.memo"
+                  class="mt-3 border-l-4 border-sky-400 bg-sky-50 px-2 py-2 text-xs font-bold leading-relaxed text-sky-950"
+                >
+                  {{ member.memo }}
+                </p>
+              </article>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <!-- 現地メモ -->
+      <section class="mt-4 border-l-4 border-orange-500 bg-orange-50 px-3 py-3">
+        <h2 class="text-sm font-black text-orange-950">
+          確認メモ
+        </h2>
+        <p class="mt-1 text-sm font-medium leading-relaxed text-orange-950">
+          白や淡い色は画面上では見え方が変わる場合があります。現地では周囲の明るさに合わせて確認してください。
+        </p>
+      </section>
+    </div>
   </main>
 </template>
+
+<style scoped>
+main {
+  font-family:
+    'Noto Sans JP',
+    'BIZ UDPGothic',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family:
+    'Zen Kaku Gothic New',
+    'Noto Sans JP',
+    system-ui,
+    sans-serif;
+}
+</style>

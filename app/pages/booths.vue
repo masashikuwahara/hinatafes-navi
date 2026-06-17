@@ -1,332 +1,548 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import {
-  boothItems,
-  type BoothArea,
-  type BoothGenre,
-} from '~/data/booths'
+import { computed, onMounted, ref, watch } from 'vue'
+import { boothItems } from '~/data/booths'
+
+type DisplayBoothItem = {
+  id: string
+  name: string
+  genre: string
+  area: string
+  location?: string
+  description?: string
+  openingHours?: string
+  tags: string[]
+  isRecommended?: boolean
+  isOfficial?: boolean
+}
+
+type FilterOption = {
+  id: string
+  label: string
+}
+
+const FAVORITE_STORAGE_KEY = 'hinatafes-booth-favorites-v2'
 
 useAppSeo({
   title: '出店・ブース一覧',
   description:
-    'ひなたフェス2026の出店・ブース情報を確認できるページです。ジャンルや場所、お気に入りを使って、現地で回りたいブースをスマホで整理できます。',
-  path: '/booths',
+    'ひなたフェス2026の出店・ブース一覧です。フード、物販、企画ブースなどをジャンルやエリアで絞り込み、気になるブースをお気に入り保存できます。',
 })
 
-const selectedGenre = ref<BoothGenre | 'all'>('all')
-const selectedArea = ref<BoothArea | 'all'>('all')
+const keyword = ref('')
+const selectedGenre = ref('all')
+const selectedArea = ref('all')
 const showFavoritesOnly = ref(false)
+const favoriteIds = ref<string[]>([])
+const hasMounted = ref(false)
 
-const { value: favoriteBoothIds } = useLocalStorage<string[]>(
-  'booths:favorite-ids',
-  [],
-)
+const normalizeTags = (value: unknown): string[] => {
+  if (Array.isArray(value)) {
+    return value.map((tag) => String(tag))
+  }
 
-const genreOptions: Array<{
-  value: BoothGenre | 'all'
-  label: string
-}> = [
-  { value: 'all', label: 'すべて' },
-  { value: 'food', label: 'フード' },
-  { value: 'drink', label: 'ドリンク' },
-  { value: 'goods', label: 'グッズ' },
-  { value: 'experience', label: '体験' },
-  { value: 'rest', label: '休憩' },
-  { value: 'info', label: '案内' },
-]
+  if (typeof value === 'string' && value.trim()) {
+    return value
+      .split(',')
+      .map((tag) => tag.trim())
+      .filter(Boolean)
+  }
 
-const areaOptions: Array<{
-  value: BoothArea | 'all'
-  label: string
-}> = [
-  { value: 'all', label: 'すべて' },
-  { value: 'food-area', label: 'フードエリア' },
-  { value: 'goods-area', label: 'グッズエリア' },
-  { value: 'event-area', label: 'イベントエリア' },
-  { value: 'support-area', label: 'サポートエリア' },
-]
+  return []
+}
 
-const safeFavoriteBoothIds = computed<string[]>(() => {
-  return Array.isArray(favoriteBoothIds.value)
-    ? favoriteBoothIds.value.map(String)
-    : []
+const normalizeBoothItem = (item: unknown, index: number): DisplayBoothItem => {
+  const raw = item as {
+    id?: string | number
+    slug?: string
+    name?: string
+    title?: string
+    boothName?: string
+    genre?: string
+    category?: string
+    type?: string
+    area?: string
+    areaLabel?: string
+    location?: string
+    place?: string
+    venue?: string
+    description?: string
+    summary?: string
+    memo?: string
+    openingHours?: string
+    hours?: string
+    tags?: string[] | string
+    keywords?: string[] | string
+    isRecommended?: boolean
+    recommended?: boolean
+    isOfficial?: boolean
+    official?: boolean
+  }
+
+  return {
+    id: String(raw.id ?? raw.slug ?? `booth-${index}`),
+    name: String(raw.name ?? raw.title ?? raw.boothName ?? '出店・ブース'),
+    genre: String(raw.genre ?? raw.category ?? raw.type ?? 'other'),
+    area: String(raw.area ?? raw.areaLabel ?? 'unknown'),
+    location: raw.location ?? raw.place ?? raw.venue,
+    description: raw.description ?? raw.summary ?? raw.memo,
+    openingHours: raw.openingHours ?? raw.hours,
+    tags: [
+      ...normalizeTags(raw.tags),
+      ...normalizeTags(raw.keywords),
+    ],
+    isRecommended: Boolean(raw.isRecommended ?? raw.recommended ?? false),
+    isOfficial: Boolean(raw.isOfficial ?? raw.official ?? false),
+  }
+}
+
+const items = computed<DisplayBoothItem[]>(() => {
+  return boothItems.map((item, index) => normalizeBoothItem(item, index))
 })
 
-const filteredBoothItems = computed(() => {
-  return boothItems.filter((booth) => {
+const genreOptions = computed<FilterOption[]>(() => {
+  const genres = Array.from(new Set(items.value.map((item) => item.genre)))
+
+  return [
+    {
+      id: 'all',
+      label: 'すべて',
+    },
+    ...genres.map((genre) => ({
+      id: genre,
+      label: getGenreLabel(genre),
+    })),
+  ]
+})
+
+const areaOptions = computed<FilterOption[]>(() => {
+  const areas = Array.from(new Set(items.value.map((item) => item.area)))
+
+  return [
+    {
+      id: 'all',
+      label: '全エリア',
+    },
+    ...areas.map((area) => ({
+      id: area,
+      label: getAreaLabel(area),
+    })),
+  ]
+})
+
+const filteredItems = computed(() => {
+  const searchText = keyword.value.trim().toLowerCase()
+
+  return items.value.filter((item) => {
+    const matchesKeyword =
+      !searchText ||
+      [
+        item.name,
+        item.genre,
+        item.area,
+        item.location,
+        item.description,
+        ...item.tags,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+        .includes(searchText)
+
     const matchesGenre =
-      selectedGenre.value === 'all' || booth.genre === selectedGenre.value
+      selectedGenre.value === 'all' || item.genre === selectedGenre.value
 
     const matchesArea =
-      selectedArea.value === 'all' || booth.area === selectedArea.value
+      selectedArea.value === 'all' || item.area === selectedArea.value
 
     const matchesFavorite =
-      !showFavoritesOnly.value ||
-      safeFavoriteBoothIds.value.includes(String(booth.id))
+      !showFavoritesOnly.value || isFavorite(item.id)
 
-    return matchesGenre && matchesArea && matchesFavorite
+    return matchesKeyword && matchesGenre && matchesArea && matchesFavorite
   })
 })
 
-const favoriteCount = computed(() => safeFavoriteBoothIds.value.length)
+const favoriteItems = computed(() => {
+  return items.value.filter((item) => isFavorite(item.id))
+})
 
-const getGenreLabel = (genre: BoothGenre) => {
+const isFiltering = computed(() => {
   return (
-    genreOptions.find((option) => option.value === genre)?.label ?? 'その他'
+    keyword.value.trim() !== '' ||
+    selectedGenre.value !== 'all' ||
+    selectedArea.value !== 'all' ||
+    showFavoritesOnly.value
   )
+})
+
+const isFavorite = (itemId: string) => {
+  return favoriteIds.value.includes(itemId)
 }
 
-const getAreaLabel = (area: BoothArea) => {
-  return areaOptions.find((option) => option.value === area)?.label ?? '未設定'
-}
-
-const getGenreClass = (genre: BoothGenre) => {
-  switch (genre) {
-    case 'food':
-      return 'bg-orange-100 text-orange-700'
-    case 'drink':
-      return 'bg-sky-100 text-sky-700'
-    case 'goods':
-      return 'bg-violet-100 text-violet-700'
-    case 'experience':
-      return 'bg-pink-100 text-pink-700'
-    case 'rest':
-      return 'bg-emerald-100 text-emerald-700'
-    case 'info':
-      return 'bg-slate-100 text-slate-700'
-    default:
-      return 'bg-slate-100 text-slate-700'
-  }
-}
-
-const isFavorite = (boothId: number) => {
-  return safeFavoriteBoothIds.value.includes(String(boothId))
-}
-
-const toggleFavorite = (boothId: number) => {
-  const targetId = String(boothId)
-
-  if (isFavorite(boothId)) {
-    favoriteBoothIds.value = safeFavoriteBoothIds.value.filter(
-      (id) => id !== targetId,
-    )
+const toggleFavorite = (itemId: string) => {
+  if (isFavorite(itemId)) {
+    favoriteIds.value = favoriteIds.value.filter((id) => id !== itemId)
     return
   }
 
-  favoriteBoothIds.value = [...safeFavoriteBoothIds.value, targetId]
+  favoriteIds.value = [...favoriteIds.value, itemId]
 }
+
+const clearFilters = () => {
+  keyword.value = ''
+  selectedGenre.value = 'all'
+  selectedArea.value = 'all'
+  showFavoritesOnly.value = false
+}
+
+const getGenreLabel = (genre: string) => {
+  const labels: Record<string, string> = {
+    food: 'フード',
+    goods: '物販',
+    booth: 'ブース',
+    exhibit: '展示',
+    event: '企画',
+    rest: '休憩',
+    other: 'その他',
+  }
+
+  return labels[genre] ?? genre
+}
+
+const getAreaLabel = (area: string) => {
+  const labels: Record<string, string> = {
+    stadium: 'サンマリンスタジアム',
+    expo: 'ひなたエキスポ',
+    mall: 'ひなたモール',
+    camp: 'キャンプエリア',
+    outside: '会場外',
+    unknown: '未確認',
+  }
+
+  return labels[area] ?? area
+}
+
+const getGenreClass = (genre: string) => {
+  const classes: Record<string, string> = {
+    food: 'border-orange-600 bg-orange-50 text-orange-800',
+    goods: 'border-purple-600 bg-purple-50 text-purple-800',
+    booth: 'border-emerald-600 bg-emerald-50 text-emerald-800',
+    exhibit: 'border-sky-600 bg-sky-50 text-sky-800',
+    event: 'border-sky-600 bg-sky-50 text-sky-800',
+    rest: 'border-teal-600 bg-teal-50 text-teal-800',
+    other: 'border-slate-500 bg-white text-slate-700',
+  }
+
+  return classes[genre] ?? classes.other
+}
+
+const loadFavorites = () => {
+  try {
+    const saved = localStorage.getItem(FAVORITE_STORAGE_KEY)
+
+    if (saved) {
+      favoriteIds.value = JSON.parse(saved)
+    }
+  } catch {
+    favoriteIds.value = []
+  }
+}
+
+const saveFavorites = () => {
+  if (!hasMounted.value) {
+    return
+  }
+
+  localStorage.setItem(FAVORITE_STORAGE_KEY, JSON.stringify(favoriteIds.value))
+}
+
+onMounted(() => {
+  loadFavorites()
+  hasMounted.value = true
+})
+
+watch(favoriteIds, saveFavorites, {
+  deep: true,
+})
 </script>
 
 <template>
-  <main class="mx-auto max-w-3xl px-4 pb-24 pt-6">
-    <section class="rounded-3xl bg-gradient-to-br from-sky-100 via-white to-yellow-50 p-5 shadow-sm">
-      <p class="text-sm font-bold text-sky-600">
-        Booths
-      </p>
-
-      <h1 class="mt-2 text-2xl font-bold text-slate-900">
-        出店・ブース一覧
-      </h1>
-
-      <p class="mt-3 text-sm leading-7 text-slate-600">
-        フード、グッズ、休憩、案内などのブース情報を確認できます。
-        気になるブースはお気に入りに保存できます。
-      </p>
-    </section>
-
-    <section class="mt-6 rounded-3xl border border-yellow-100 bg-yellow-50 p-4">
-      <h2 class="text-sm font-bold text-yellow-800">
-        公式情報について
-      </h2>
-
-      <p class="mt-2 text-xs leading-6 text-yellow-800">
-        現在のブース情報は仮データです。実際の出店内容、営業時間、場所は公式発表後に更新してください。
-      </p>
-    </section>
-
-    <section class="mt-6 space-y-4">
-      <div>
-        <h2 class="text-sm font-bold text-slate-700">
-          ジャンルで絞り込み
-        </h2>
-
-        <div class="mt-3 flex gap-2 overflow-x-auto pb-1">
-          <button
-            v-for="genre in genreOptions"
-            :key="genre.value"
-            type="button"
-            class="shrink-0 rounded-full border px-4 py-2 text-sm font-bold transition"
-            :class="
-              selectedGenre === genre.value
-                ? 'border-sky-500 bg-sky-500 text-white'
-                : 'border-slate-200 bg-white text-slate-600'
-            "
-            @click="selectedGenre = genre.value"
-          >
-            {{ genre.label }}
-          </button>
-        </div>
-      </div>
-
-      <div>
-        <h2 class="text-sm font-bold text-slate-700">
-          エリアで絞り込み
-        </h2>
-
-        <div class="mt-3 flex gap-2 overflow-x-auto pb-1">
-          <button
-            v-for="area in areaOptions"
-            :key="area.value"
-            type="button"
-            class="shrink-0 rounded-full border px-4 py-2 text-sm font-bold transition"
-            :class="
-              selectedArea === area.value
-                ? 'border-sky-500 bg-sky-500 text-white'
-                : 'border-slate-200 bg-white text-slate-600'
-            "
-            @click="selectedArea = area.value"
-          >
-            {{ area.label }}
-          </button>
-        </div>
-      </div>
-
-      <div class="rounded-3xl bg-white p-4 shadow-sm">
-        <button
-          type="button"
-          class="flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left transition"
-          :class="
-            showFavoritesOnly
-              ? 'border-pink-300 bg-pink-50 text-pink-700'
-              : 'border-slate-200 bg-white text-slate-700'
-          "
-          @click="showFavoritesOnly = !showFavoritesOnly"
-        >
-          <span>
-            <span class="block text-sm font-bold">
-              お気に入りのみ表示
-            </span>
-            <span class="mt-1 block text-xs text-slate-500">
-              保存済み：{{ favoriteCount }}件
-            </span>
-          </span>
-
-          <span class="text-xl">
-            {{ showFavoritesOnly ? '♥' : '♡' }}
-          </span>
-        </button>
-      </div>
-    </section>
-
-    <section class="mt-6">
-      <div class="flex items-end justify-between">
-        <h2 class="text-lg font-bold text-slate-900">
-          ブース一覧
-        </h2>
-
-        <p class="text-xs text-slate-500">
-          {{ filteredBoothItems.length }}件
+  <main class="min-h-screen bg-[#f7fbfc] pb-24 text-slate-900">
+    <div class="mx-auto max-w-md px-4 py-4">
+      <!-- ヘッダー -->
+      <section class="border-b-4 border-sky-400 pb-3">
+        <p class="text-xs font-black tracking-[0.16em] text-sky-700">
+          BOOTH GUIDE
         </p>
-      </div>
 
-      <div
-        v-if="filteredBoothItems.length > 0"
-        class="mt-4 space-y-4"
-      >
-        <article
-          v-for="booth in filteredBoothItems"
-          :key="booth.id"
-          class="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm"
+        <div class="mt-1 flex items-end justify-between gap-3">
+          <div>
+            <h1 class="text-[1.35rem] font-black leading-tight">
+              出店・ブース
+            </h1>
+            <p class="mt-1 text-sm font-medium leading-snug text-slate-700">
+              食べる・買う・見る場所を、エリア別に確認します。
+            </p>
+          </div>
+
+          <NuxtLink
+            to="/"
+            class="shrink-0 border-2 border-slate-800 bg-white px-2 py-1 text-xs font-black active:bg-slate-100"
+          >
+            TOP
+          </NuxtLink>
+        </div>
+      </section>
+
+      <!-- 検索・絞り込み -->
+      <section class="sticky top-0 z-20 -mx-4 mt-3 border-y-2 border-slate-800 bg-white px-4 py-3">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <p class="text-xs font-black text-slate-500">
+              表示件数
+            </p>
+            <p class="mt-0.5 text-xl font-black leading-none">
+              {{ filteredItems.length }} / {{ items.length }}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            class="border-2 px-3 py-2 text-xs font-black active:translate-y-[1px]"
+            :class="
+              showFavoritesOnly
+                ? 'border-amber-600 bg-amber-100 text-amber-950'
+                : 'border-slate-300 bg-white text-slate-700'
+            "
+            @click="showFavoritesOnly = !showFavoritesOnly"
+          >
+            ★ お気に入り
+          </button>
+        </div>
+
+        <input
+          v-model="keyword"
+          type="search"
+          placeholder="店名・場所・ジャンルで検索"
+          class="mt-3 w-full border-2 border-slate-300 bg-white px-3 py-2 text-base font-bold outline-none focus:border-sky-500"
         >
-          <div class="flex items-start justify-between gap-3">
-            <div class="min-w-0">
-              <div class="flex flex-wrap items-center gap-2">
-                <span
-                  class="rounded-full px-2.5 py-1 text-xs font-bold"
-                  :class="getGenreClass(booth.genre)"
-                >
-                  {{ getGenreLabel(booth.genre) }}
-                </span>
 
-                <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600">
-                  {{ getAreaLabel(booth.area) }}
-                </span>
-              </div>
-
-              <h3 class="mt-3 text-base font-bold text-slate-900">
-                {{ booth.name }}
-              </h3>
-            </div>
-
+        <div class="mt-3 -mx-4 overflow-x-auto px-4">
+          <div class="flex w-max gap-2 pb-1">
             <button
+              v-for="option in genreOptions"
+              :key="option.id"
               type="button"
-              class="shrink-0 rounded-full border px-3 py-2 text-lg transition"
+              class="border-2 px-3 py-2 text-xs font-black active:translate-y-[1px]"
               :class="
-                isFavorite(booth.id)
-                  ? 'border-pink-300 bg-pink-50 text-pink-500'
-                  : 'border-slate-200 bg-white text-slate-400'
+                selectedGenre === option.id
+                  ? 'border-slate-900 bg-slate-900 text-white'
+                  : 'border-slate-300 bg-white text-slate-700'
               "
-              :aria-label="
-                isFavorite(booth.id)
-                  ? `${booth.name}をお気に入りから外す`
-                  : `${booth.name}をお気に入りに追加する`
-              "
-              @click="toggleFavorite(booth.id)"
+              @click="selectedGenre = option.id"
             >
-              {{ isFavorite(booth.id) ? '♥' : '♡' }}
+              {{ option.label }}
             </button>
           </div>
+        </div>
 
-          <div class="mt-3 space-y-1 text-sm text-slate-600">
-            <p>
-              <span class="font-bold text-slate-700">場所：</span>
-              {{ booth.place }}
-            </p>
-
-            <p>
-              <span class="font-bold text-slate-700">時間：</span>
-              {{ booth.openingHours }}
-            </p>
-          </div>
-
-          <p class="mt-3 text-sm leading-7 text-slate-600">
-            {{ booth.description }}
-          </p>
-
-          <p
-            v-if="booth.notes"
-            class="mt-3 rounded-2xl bg-sky-50 px-3 py-2 text-xs leading-6 text-sky-700"
-          >
-            {{ booth.notes }}
-          </p>
-
-          <div
-            v-if="booth.tags.length > 0"
-            class="mt-3 flex flex-wrap gap-2"
-          >
-            <span
-              v-for="tag in booth.tags"
-              :key="tag"
-              class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-500"
+        <div class="mt-2 -mx-4 overflow-x-auto px-4">
+          <div class="flex w-max gap-2 pb-1">
+            <button
+              v-for="option in areaOptions"
+              :key="option.id"
+              type="button"
+              class="border-2 px-3 py-2 text-xs font-black active:translate-y-[1px]"
+              :class="
+                selectedArea === option.id
+                  ? 'border-sky-600 bg-sky-100 text-sky-950'
+                  : 'border-slate-300 bg-white text-slate-700'
+              "
+              @click="selectedArea = option.id"
             >
-              #{{ tag }}
-            </span>
+              {{ option.label }}
+            </button>
           </div>
-        </article>
-      </div>
+        </div>
+      </section>
 
-      <div
-        v-else
-        class="mt-4 rounded-3xl border border-dashed border-slate-200 bg-white p-6 text-center"
+      <!-- お気に入りメモ -->
+      <section
+        v-if="favoriteItems.length > 0 && !showFavoritesOnly"
+        class="mt-4 border-l-4 border-amber-500 bg-amber-50 px-3 py-3"
       >
-        <p class="text-sm font-bold text-slate-700">
-          条件に一致するブースがありません
-        </p>
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <p class="text-xs font-black text-amber-800">
+              あとで見る
+            </p>
+            <p class="mt-1 text-sm font-black leading-snug text-amber-950">
+              お気に入り {{ favoriteItems.length }}件
+            </p>
+          </div>
 
-        <p class="mt-2 text-xs text-slate-500">
-          ジャンル、エリア、お気に入り条件を変更してください。
+          <button
+            type="button"
+            class="shrink-0 border-2 border-amber-700 bg-white px-2 py-1 text-xs font-black text-amber-900"
+            @click="showFavoritesOnly = true"
+          >
+            表示
+          </button>
+        </div>
+      </section>
+
+      <!-- 一覧 -->
+      <section class="mt-4">
+        <div class="mb-2 flex items-end justify-between gap-3">
+          <h2 class="text-base font-black">
+            会場案内
+          </h2>
+
+          <button
+            v-if="isFiltering"
+            type="button"
+            class="text-xs font-black text-sky-700 underline underline-offset-4"
+            @click="clearFilters"
+          >
+            絞り込み解除
+          </button>
+        </div>
+
+        <div
+          v-if="filteredItems.length === 0"
+          class="border-2 border-dashed border-slate-300 bg-white px-3 py-5 text-center"
+        >
+          <p class="text-sm font-black">
+            該当する出店・ブースがありません
+          </p>
+          <p class="mt-1 text-xs font-medium text-slate-600">
+            検索語、ジャンル、エリアを変更してください。
+          </p>
+        </div>
+
+        <ul v-else class="border-y-2 border-slate-800 bg-white">
+          <li
+            v-for="item in filteredItems"
+            :key="item.id"
+            class="border-b border-dashed border-slate-300 last:border-b-0"
+          >
+            <div class="px-3 py-3">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span
+                      class="border px-1.5 py-0.5 text-[10px] font-black"
+                      :class="getGenreClass(item.genre)"
+                    >
+                      {{ getGenreLabel(item.genre) }}
+                    </span>
+
+                    <span class="border border-slate-300 bg-white px-1.5 py-0.5 text-[10px] font-black text-slate-600">
+                      {{ getAreaLabel(item.area) }}
+                    </span>
+
+                    <span
+                      v-if="item.isRecommended"
+                      class="border border-orange-500 bg-orange-50 px-1.5 py-0.5 text-[10px] font-black text-orange-700"
+                    >
+                      注目
+                    </span>
+
+                    <span
+                      v-if="item.isOfficial"
+                      class="border border-sky-500 bg-sky-50 px-1.5 py-0.5 text-[10px] font-black text-sky-700"
+                    >
+                      公式
+                    </span>
+                  </div>
+
+                  <p class="mt-2 text-base font-black leading-snug">
+                    {{ item.name }}
+                  </p>
+
+                  <p
+                    v-if="item.location"
+                    class="mt-1 text-sm font-bold leading-snug text-slate-700"
+                  >
+                    場所：{{ item.location }}
+                  </p>
+
+                  <p
+                    v-if="item.openingHours"
+                    class="mt-1 text-sm font-bold leading-snug text-slate-700"
+                  >
+                    時間：{{ item.openingHours }}
+                  </p>
+
+                  <p
+                    v-if="item.description"
+                    class="mt-1 text-sm font-medium leading-relaxed text-slate-600"
+                  >
+                    {{ item.description }}
+                  </p>
+
+                  <div
+                    v-if="item.tags.length > 0"
+                    class="mt-2 flex flex-wrap gap-1.5"
+                  >
+                    <span
+                      v-for="tag in item.tags"
+                      :key="tag"
+                      class="bg-slate-100 px-1.5 py-0.5 text-[11px] font-bold text-slate-600"
+                    >
+                      #{{ tag }}
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  class="shrink-0 border-2 px-2 py-1 text-sm font-black active:translate-y-[1px]"
+                  :class="
+                    isFavorite(item.id)
+                      ? 'border-amber-600 bg-amber-100 text-amber-950'
+                      : 'border-slate-300 bg-white text-slate-500'
+                  "
+                  :aria-pressed="isFavorite(item.id)"
+                  @click="toggleFavorite(item.id)"
+                >
+                  ★
+                </button>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <!-- 現地メモ -->
+      <section class="mt-4 border-l-4 border-sky-500 bg-sky-50 px-3 py-3">
+        <h2 class="text-sm font-black text-sky-950">
+          探し方メモ
+        </h2>
+        <p class="mt-1 text-sm font-medium leading-relaxed text-sky-950">
+          気になる出店は★で保存。混雑時はエリアで絞って、近い場所から確認すると迷いにくいです。
         </p>
-      </div>
-    </section>
+      </section>
+    </div>
   </main>
 </template>
+
+<style scoped>
+main {
+  font-family:
+    'Noto Sans JP',
+    'BIZ UDPGothic',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+}
+
+h1,
+h2 {
+  font-family:
+    'Zen Kaku Gothic New',
+    'Noto Sans JP',
+    system-ui,
+    sans-serif;
+}
+</style>

@@ -1,745 +1,755 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import {
-  getSpotArea,
-  getSpotCategory,
-  spotAreas,
-  spotCategories,
-  spots,
-  type SpotArea,
-  type SpotCategory,
-} from '~/data/spots'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { spots } from '~/data/spots'
 
-const {
-  status: geolocationStatus,
-  location: currentLocation,
-  errorMessage: geolocationErrorMessage,
-  isSupported: isGeolocationSupported,
-  isWatching: isGeolocationWatching,
-  getCurrentLocation,
-  startWatchingLocation,
-  stopWatchingLocation,
-  clearLocation,
-} = useGeolocation()
+type SpotCategory =
+  | 'entrance'
+  | 'stage'
+  | 'goods'
+  | 'food'
+  | 'booth'
+  | 'rest'
+  | 'toilet'
+  | 'water'
+  | 'medical'
+  | 'transport'
+  | 'meeting'
+  | 'other'
 
-const shouldFollowCurrentLocation = ref(true)
+type SpotArea =
+  | 'center'
+  | 'north'
+  | 'south'
+  | 'east'
+  | 'west'
+  | 'outside'
+  | 'unknown'
 
-const handleGetCurrentLocation = () => {
-  shouldFollowCurrentLocation.value = true
-  getCurrentLocation()
+type CoordinateStatus = 'confirmed' | 'approximate'
+
+type DisplaySpot = {
+  id: string
+  name: string
+  category: SpotCategory
+  area: SpotArea
+  description?: string
+  latitude: number
+  longitude: number
+  coordinateStatus: CoordinateStatus
+  isImportant?: boolean
 }
 
-const handleStartFollowingLocation = () => {
-  shouldFollowCurrentLocation.value = true
-  startWatchingLocation()
+type CurrentLocation = {
+  latitude: number
+  longitude: number
+  accuracy: number | null
+  updatedAt: string
 }
 
-const handleStopFollowingLocation = () => {
-  shouldFollowCurrentLocation.value = false
-  stopWatchingLocation()
+type CategoryFilter = {
+  id: SpotCategory | 'all'
+  label: string
 }
 
-const handleMapMovedByUser = () => {
-  if (shouldFollowCurrentLocation.value) {
-    shouldFollowCurrentLocation.value = false
+const LOCATION_OPTIONS: PositionOptions = {
+  enableHighAccuracy: true,
+  timeout: 15_000,
+  maximumAge: 5_000,
+}
+
+useAppSeo({
+  title: '会場マップ',
+  description:
+    'ひなたフェス2026の会場マップです。現在地、スポット、トイレ、救護、交通、出店・ブースなどを現地で確認できます。',
+})
+
+const selectedCategory = ref<SpotCategory | 'all'>('all')
+const selectedSpotId = ref<string | null>(null)
+const currentLocation = ref<CurrentLocation | null>(null)
+const isGettingLocation = ref(false)
+const isFollowingLocation = ref(false)
+const locationErrorMessage = ref('')
+const watchId = ref<number | null>(null)
+const followRequestKey = ref(0)
+
+const normalizeSpot = (spot: unknown, index: number): DisplaySpot => {
+  const raw = spot as {
+    id?: string | number
+    slug?: string
+    name?: string
+    title?: string
+    category?: SpotCategory
+    type?: SpotCategory
+    area?: SpotArea
+    areaKey?: SpotArea
+    description?: string
+    memo?: string
+    latitude?: number
+    lat?: number
+    longitude?: number
+    lng?: number
+    coordinateStatus?: CoordinateStatus
+    coordinate_status?: CoordinateStatus
+    isImportant?: boolean
+    important?: boolean
+  }
+
+  return {
+    id: String(raw.id ?? raw.slug ?? `spot-${index}`),
+    name: String(raw.name ?? raw.title ?? 'スポット'),
+    category: raw.category ?? raw.type ?? 'other',
+    area: raw.area ?? raw.areaKey ?? 'unknown',
+    description: raw.description ?? raw.memo,
+    latitude: Number(raw.latitude ?? raw.lat ?? 0),
+    longitude: Number(raw.longitude ?? raw.lng ?? 0),
+    coordinateStatus:
+      raw.coordinateStatus ?? raw.coordinate_status ?? 'approximate',
+    isImportant: Boolean(raw.isImportant ?? raw.important ?? false),
   }
 }
 
-const handleClearLocation = () => {
-  shouldFollowCurrentLocation.value = false
-  clearLocation()
-}
+const spotItems = computed<DisplaySpot[]>(() => {
+  return spots
+    .map((spot, index) => normalizeSpot(spot, index))
+    .filter((spot) => spot.latitude !== 0 && spot.longitude !== 0)
+})
 
-const geolocationStatusLabel = computed(() => {
-  if (geolocationStatus.value === 'loading') {
-    return '現在地を取得中'
+const categoryFilters = computed<CategoryFilter[]>(() => {
+  const categories = Array.from(
+    new Set(spotItems.value.map((spot) => spot.category)),
+  )
+
+  return [
+    {
+      id: 'all',
+      label: 'すべて',
+    },
+    ...categories.map((category) => ({
+      id: category,
+      label: getCategoryLabel(category),
+    })),
+  ]
+})
+
+const filteredSpots = computed(() => {
+  const items =
+    selectedCategory.value === 'all'
+      ? spotItems.value
+      : spotItems.value.filter((spot) => spot.category === selectedCategory.value)
+
+  return [...items].sort((a, b) => {
+    const distanceA = getDistanceFromCurrentLocation(a)
+    const distanceB = getDistanceFromCurrentLocation(b)
+
+    if (distanceA === null && distanceB === null) {
+      return getCategoryPriority(a.category) - getCategoryPriority(b.category)
+    }
+
+    if (distanceA === null) {
+      return 1
+    }
+
+    if (distanceB === null) {
+      return -1
+    }
+
+    return distanceA - distanceB
+  })
+})
+
+const selectedSpot = computed(() => {
+  if (!selectedSpotId.value) {
+    return null
   }
 
-  if (geolocationStatus.value === 'success') {
-    return '現在地を取得済み'
+  return spotItems.value.find((spot) => spot.id === selectedSpotId.value) ?? null
+})
+
+const locationStatusText = computed(() => {
+  if (isFollowingLocation.value) {
+    return '追従中'
   }
 
-  if (geolocationStatus.value === 'error') {
-    return '現在地を取得できませんでした'
+  if (currentLocation.value) {
+    return '取得済み'
   }
 
-  if (geolocationStatus.value === 'unsupported') {
-    return '位置情報非対応'
+  if (locationErrorMessage.value) {
+    return '取得できません'
   }
 
   return '未取得'
 })
 
-const currentLocationAccuracyLabel = computed(() => {
+const accuracyText = computed(() => {
+  if (!currentLocation.value?.accuracy) {
+    return '未取得'
+  }
+
+  return `約${Math.round(currentLocation.value.accuracy)}m`
+})
+
+const updatedAtText = computed(() => {
+  if (!currentLocation.value?.updatedAt) {
+    return 'まだ更新なし'
+  }
+
+  return `${currentLocation.value.updatedAt} 更新`
+})
+
+const nearestSpots = computed(() => {
   if (!currentLocation.value) {
-    return ''
+    return filteredSpots.value.slice(0, 5)
   }
 
-  return `誤差 約${Math.round(currentLocation.value.accuracy)}m`
+  return filteredSpots.value
+    .filter((spot) => getDistanceFromCurrentLocation(spot) !== null)
+    .slice(0, 5)
 })
 
-const currentLocationAccuracyLevel = computed(() => {
+const formatTime = () => {
+  const now = new Date()
+  const hours = String(now.getHours()).padStart(2, '0')
+  const minutes = String(now.getMinutes()).padStart(2, '0')
+
+  return `${hours}:${minutes}`
+}
+
+const getCategoryLabel = (category: string) => {
+  const labels: Record<string, string> = {
+    entrance: '入口',
+    stage: 'ステージ',
+    goods: '物販',
+    food: 'フード',
+    booth: 'ブース',
+    rest: '休憩',
+    toilet: 'トイレ',
+    water: '給水',
+    medical: '救護',
+    transport: '交通',
+    meeting: '集合',
+    other: 'その他',
+  }
+
+  return labels[category] ?? category
+}
+
+const getAreaLabel = (area: string) => {
+  const labels: Record<string, string> = {
+    center: '中央',
+    north: '北側',
+    south: '南側',
+    east: '東側',
+    west: '西側',
+    outside: '会場外',
+    unknown: '未確認',
+  }
+
+  return labels[area] ?? area
+}
+
+const getCategoryPriority = (category: SpotCategory) => {
+  const priorities: Record<SpotCategory, number> = {
+    medical: 1,
+    toilet: 2,
+    water: 3,
+    transport: 4,
+    entrance: 5,
+    stage: 6,
+    food: 7,
+    goods: 8,
+    booth: 9,
+    rest: 10,
+    meeting: 11,
+    other: 12,
+  }
+
+  return priorities[category] ?? 99
+}
+
+const getCategoryClass = (category: string) => {
+  const classes: Record<string, string> = {
+    entrance: 'border-slate-600 bg-slate-50 text-slate-800',
+    stage: 'border-sky-600 bg-sky-50 text-sky-800',
+    goods: 'border-purple-600 bg-purple-50 text-purple-800',
+    food: 'border-orange-600 bg-orange-50 text-orange-800',
+    booth: 'border-emerald-600 bg-emerald-50 text-emerald-800',
+    rest: 'border-teal-600 bg-teal-50 text-teal-800',
+    toilet: 'border-blue-600 bg-blue-50 text-blue-800',
+    water: 'border-cyan-600 bg-cyan-50 text-cyan-800',
+    medical: 'border-red-600 bg-red-50 text-red-800',
+    transport: 'border-slate-600 bg-slate-50 text-slate-800',
+    meeting: 'border-amber-600 bg-amber-50 text-amber-800',
+    other: 'border-slate-500 bg-white text-slate-700',
+  }
+
+  return classes[category] ?? classes.other
+}
+
+const getDistance = (
+  fromLatitude: number,
+  fromLongitude: number,
+  toLatitude: number,
+  toLongitude: number,
+) => {
+  const earthRadius = 6_371_000
+  const toRadians = (degree: number) => (degree * Math.PI) / 180
+
+  const lat1 = toRadians(fromLatitude)
+  const lat2 = toRadians(toLatitude)
+  const deltaLat = toRadians(toLatitude - fromLatitude)
+  const deltaLng = toRadians(toLongitude - fromLongitude)
+
+  const a =
+    Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+    Math.cos(lat1) *
+      Math.cos(lat2) *
+      Math.sin(deltaLng / 2) *
+      Math.sin(deltaLng / 2)
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+
+  return earthRadius * c
+}
+
+const getDistanceFromCurrentLocation = (spot: DisplaySpot) => {
   if (!currentLocation.value) {
-    return 'none'
+    return null
   }
 
-  const accuracy = currentLocation.value.accuracy
-
-  if (accuracy <= 30) {
-    return 'good'
-  }
-
-  if (accuracy <= 100) {
-    return 'rough'
-  }
-
-  return 'poor'
-})
-
-const currentLocationAccuracyMessage = computed(() => {
-  if (!currentLocation.value) {
-    return ''
-  }
-
-  if (currentLocationAccuracyLevel.value === 'good') {
-    return '比較的精度の高い現在地です。'
-  }
-
-  if (currentLocationAccuracyLevel.value === 'rough') {
-    return '現在地は少しずれている可能性があります。'
-  }
-
-  return '現在地は大きくずれている可能性があります。目安として利用してください。'
-})
-
-useAppSeo({
-  title: '会場マップ・現在地確認',
-  description:
-    'ひなたフェス2026の会場周辺スポットを確認できる現地マップです。スポット一覧、現在地確認、目的地の把握など、現地移動をサポートします。',
-  path: '/map',
-})
-
-const selectedCategory = ref<SpotCategory | 'all'>('all')
-const selectedArea = ref<SpotArea | 'all'>('all')
-const keyword = ref('')
-const importantOnly = ref(false)
-
-const filteredSpots = computed(() => {
-  const searchText = keyword.value.trim().toLowerCase()
-
-  return [...spots]
-    .filter((spot) => {
-      if (selectedCategory.value !== 'all' && spot.category !== selectedCategory.value) {
-        return false
-      }
-
-      if (selectedArea.value !== 'all' && spot.area !== selectedArea.value) {
-        return false
-      }
-
-      if (importantOnly.value && !spot.isImportant) {
-        return false
-      }
-
-      if (searchText) {
-        const targetText = [
-          spot.name,
-          spot.description,
-          spot.memo,
-          ...spot.tags,
-        ]
-          .filter(Boolean)
-          .join(' ')
-          .toLowerCase()
-
-        return targetText.includes(searchText)
-      }
-
-      return true
-    })
-    .sort((a, b) => a.sortOrder - b.sortOrder)
-})
-
-const importantSpots = computed(() => {
-  return spots
-    .filter((spot) => spot.isImportant)
-    .sort((a, b) => a.sortOrder - b.sortOrder)
-})
-
-const mappableSpots = computed(() => {
-  return spots.filter(
-    (spot) => spot.latitude !== null && spot.longitude !== null
+  return getDistance(
+    currentLocation.value.latitude,
+    currentLocation.value.longitude,
+    spot.latitude,
+    spot.longitude,
   )
-})
+}
 
-const unmappedSpots = computed(() => {
-  return spots.filter(
-    (spot) => spot.latitude === null || spot.longitude === null
+const formatDistance = (spot: DisplaySpot) => {
+  const distance = getDistanceFromCurrentLocation(spot)
+
+  if (distance === null) {
+    return '距離未取得'
+  }
+
+  if (distance < 1000) {
+    return `約${Math.round(distance)}m`
+  }
+
+  return `約${(distance / 1000).toFixed(1)}km`
+}
+
+const handlePositionSuccess = (position: GeolocationPosition) => {
+  currentLocation.value = {
+    latitude: position.coords.latitude,
+    longitude: position.coords.longitude,
+    accuracy: position.coords.accuracy,
+    updatedAt: formatTime(),
+  }
+
+  locationErrorMessage.value = ''
+  isGettingLocation.value = false
+}
+
+const handlePositionError = (error: GeolocationPositionError) => {
+  const messages: Record<number, string> = {
+    1: '位置情報の許可が必要です。',
+    2: '現在地を取得できませんでした。',
+    3: '現在地の取得がタイムアウトしました。',
+  }
+
+  locationErrorMessage.value =
+    messages[error.code] ?? '現在地を取得できませんでした。'
+  isGettingLocation.value = false
+  isFollowingLocation.value = false
+}
+
+const getCurrentLocation = () => {
+  if (!process.client || !navigator.geolocation) {
+    locationErrorMessage.value = 'この端末では位置情報を利用できません。'
+    return
+  }
+
+  isGettingLocation.value = true
+
+  navigator.geolocation.getCurrentPosition(
+    handlePositionSuccess,
+    handlePositionError,
+    LOCATION_OPTIONS,
   )
-})
-
-const resetFilters = () => {
-  selectedCategory.value = 'all'
-  selectedArea.value = 'all'
-  keyword.value = ''
-  importantOnly.value = false
 }
 
-const getCoordinateStatusLabel = (status: 'confirmed' | 'approximate' | 'unknown') => {
-  if (status === 'confirmed') {
-    return '位置確定'
+const startFollowingLocation = () => {
+  if (!process.client || !navigator.geolocation) {
+    locationErrorMessage.value = 'この端末では位置情報を利用できません。'
+    return
   }
 
-  if (status === 'approximate') {
-    return 'おおよその位置'
+  if (watchId.value !== null) {
+    navigator.geolocation.clearWatch(watchId.value)
   }
 
-  return '位置未設定'
+  isGettingLocation.value = true
+  isFollowingLocation.value = true
+
+  // 追従ボタンを押すたびに、地図側へ「今すぐ中央へ寄せる」合図を送る
+  followRequestKey.value += 1
+
+  watchId.value = navigator.geolocation.watchPosition(
+    handlePositionSuccess,
+    handlePositionError,
+    LOCATION_OPTIONS,
+  )
 }
 
-const showGeolocationFallback = computed(() => {
-  return geolocationStatus.value === 'error'
-    || geolocationStatus.value === 'unsupported'
-})
-
-const geolocationFallbackTitle = computed(() => {
-  if (geolocationStatus.value === 'unsupported') {
-    return 'この環境では位置情報を利用できません'
+const stopFollowingLocation = () => {
+  if (!process.client || watchId.value === null) {
+    isFollowingLocation.value = false
+    return
   }
 
-  if (geolocationStatus.value === 'error') {
-    return '現在地を取得できませんでした'
-  }
-
-  return ''
-})
-
-const geolocationFallbackDescription = computed(() => {
-  if (geolocationStatus.value === 'unsupported') {
-    return 'お使いのブラウザ、端末、またはアクセス環境では位置情報が利用できない可能性があります。'
-  }
-
-  if (geolocationStatus.value === 'error') {
-    return '位置情報の許可設定、通信状況、端末のGPS設定などを確認してください。'
-  }
-
-  return ''
-})
-
-const geolocationFallbackTips = [
-  'ブラウザの位置情報許可を確認する',
-  'スマホ本体の位置情報設定をオンにする',
-  '会場ではスポット一覧や公式案内もあわせて確認する',
-  '取得できない場合は、地図上の現在地表示なしで利用する',
-]
-
-const getCoordinateStatusClass = (status: 'confirmed' | 'approximate' | 'unknown') => {
-  if (status === 'confirmed') {
-    return 'border-sky-200 bg-sky-50 text-sky-700'
-  }
-
-  if (status === 'approximate') {
-    return 'border-amber-200 bg-amber-50 text-amber-700'
-  }
-
-  return 'border-slate-200 bg-slate-50 text-slate-500'
+  navigator.geolocation.clearWatch(watchId.value)
+  watchId.value = null
+  isFollowingLocation.value = false
 }
+
+const selectCategory = (category: SpotCategory | 'all') => {
+  selectedCategory.value = category
+}
+
+const selectSpot = (spot: DisplaySpot | string) => {
+  if (typeof spot === 'string') {
+    selectedSpotId.value = spot
+    return
+  }
+
+  selectedSpotId.value = spot.id
+}
+
+const focusSpot = (spot: DisplaySpot) => {
+  selectedSpotId.value = spot.id
+}
+
+onMounted(() => {
+  getCurrentLocation()
+})
+
+onUnmounted(() => {
+  stopFollowingLocation()
+})
 </script>
 
 <template>
-  <div class="app-container space-y-6 pb-8 pt-4">
-    <!-- ページ見出し -->
-    <section
-      class="overflow-hidden rounded-card border border-hinata-border bg-gradient-to-br from-hinata-sky-soft via-white to-hinata-yellow-soft p-5 shadow-card"
-    >
-      <p class="text-xs font-bold uppercase tracking-[0.25em] text-hinata-sky">
-        MAP
-      </p>
+  <main class="min-h-screen bg-[#f7fbfc] pb-24 text-slate-900">
+    <div class="mx-auto max-w-md px-4 py-4">
+      <!-- ヘッダー -->
+      <section class="border-b-4 border-sky-400 pb-3">
+        <p class="text-xs font-black tracking-[0.16em] text-sky-700">
+          FIELD MAP
+        </p>
 
-      <h1 class="mt-2 text-2xl font-bold text-hinata-navy">
-        会場マップ・スポット一覧
-      </h1>
-
-      <p class="mt-3 text-sm leading-7 text-hinata-muted">
-        入口、グッズ、飲食、休憩、給水、トイレ、救護など、現地で確認したいスポットをまとめます。
-        現在地を取得すると、地図上で自分の位置も確認できます。
-      </p>
-    </section>
-
-    <!-- 簡易マップ -->
-    <section class="mt-6 rounded-3xl border border-sky-100 bg-white p-4 shadow-sm">
-      <div class="flex items-center justify-between gap-3">
-        <div>
-          <h2 class="text-lg font-bold text-slate-900">
-            簡易マップ
-          </h2>
-          <p class="mt-1 text-xs text-slate-500">
-            座標が登録されているスポットを地図上に表示します。
-          </p>
-        </div>
-
-        <span class="rounded-full bg-sky-50 px-3 py-1.5 text-xs font-bold text-sky-600">
-          OpenStreetMap
-        </span>
-      </div>
-
-      <div class="mt-4">
-        <ClientOnly>
-          <SpotLeafletMap
-            :spots="filteredSpots"
-            :current-location="currentLocation"
-            :follow-current-location="shouldFollowCurrentLocation"
-            @user-moved-map="handleMapMovedByUser"
-          />
-
-          <template #fallback>
-            <div class="grid min-h-[280px] place-items-center rounded-card border border-dashed border-hinata-border bg-hinata-sky-soft p-6 text-center">
-              <div>
-                <div class="mx-auto flex size-16 items-center justify-center rounded-card bg-white text-3xl shadow-soft">
-                  🗺️
-                </div>
-
-                <p class="mt-4 text-sm font-bold text-hinata-navy">
-                  地図を読み込み中です
-                </p>
-              </div>
-            </div>
-          </template>
-        </ClientOnly>
-      </div>
-
-      <div class="mt-4 rounded-2xl border border-slate-100 bg-slate-50 p-4">
-        <div class="flex items-start justify-between gap-3">
+        <div class="mt-1 flex items-end justify-between gap-3">
           <div>
-            <h3 class="text-sm font-bold text-slate-800">
-              現在地
-            </h3>
-
-            <p class="mt-1 text-xs leading-6 text-slate-500">
-              ボタンを押すと、ブラウザの許可後に現在地を地図上へ表示します。
+            <h1 class="text-[1.35rem] font-black leading-tight">
+              会場マップ
+            </h1>
+            <p class="mt-1 text-sm font-medium leading-snug text-slate-700">
+              現在地・スポット・近くの場所を確認します。
             </p>
           </div>
 
-          <span
-            class="shrink-0 rounded-full px-3 py-1.5 text-xs font-bold"
-            :class="
-              geolocationStatus === 'success'
-                ? 'bg-sky-100 text-sky-700'
-                : geolocationStatus === 'error' || geolocationStatus === 'unsupported'
-                  ? 'bg-rose-100 text-rose-700'
-                  : geolocationStatus === 'loading'
-                    ? 'bg-yellow-100 text-yellow-700'
-                    : 'bg-white text-slate-500'
-            "
+          <NuxtLink
+            to="/"
+            class="shrink-0 border-2 border-slate-800 bg-white px-2 py-1 text-xs font-black active:bg-slate-100"
           >
-            {{ geolocationStatusLabel }}
-          </span>
+            TOP
+          </NuxtLink>
         </div>
+      </section>
 
-        <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
-          <button
-            type="button"
-            class="app-button-primary disabled:cursor-not-allowed disabled:bg-slate-300"
-            :disabled="geolocationStatus === 'loading' || !isGeolocationSupported"
-            @click="handleGetCurrentLocation"
-          >
-            <span v-if="geolocationStatus === 'loading'">
-              取得中...
-            </span>
-            <span v-else>
-              現在地へ移動
-            </span>
-          </button>
-
-          <button
-            v-if="isGeolocationSupported"
-            type="button"
-            class="app-button-secondary"
-            :disabled="geolocationStatus === 'loading'"
-            @click="isGeolocationWatching ? handleStopFollowingLocation() : handleStartFollowingLocation()"
-          >
-            <span v-if="isGeolocationWatching">
-              追従を停止
-            </span>
-            <span v-else>
-              現在地に追従
-            </span>
-          </button>
-
-          <button
-            v-if="currentLocation"
-            type="button"
-            class="app-button-secondary"
-            @click="handleClearLocation"
-          >
-            現在地を消す
-          </button>
-        </div>
-
-        <p
-          v-if="currentLocation"
-          class="mt-2 text-xs font-bold"
-          :class="shouldFollowCurrentLocation && isGeolocationWatching
-            ? 'text-hinata-sky'
-            : 'text-hinata-muted'"
-        >
-          {{ shouldFollowCurrentLocation && isGeolocationWatching ? '現在地に追従中' : '地図を自由に操作できます' }}
-        </p>
-
-        <div
-          v-if="currentLocation"
-          class="mt-3 rounded-2xl bg-white px-4 py-3 text-xs leading-6 text-slate-600"
-        >
-          <p class="font-bold text-slate-700">
-            現在地の目安：{{ currentLocationAccuracyLabel }}
-          </p>
-
-          <p
-            class="mt-1 text-xs leading-6"
-            :class="
-              currentLocationAccuracyLevel === 'good'
-                ? 'text-sky-600'
-                : currentLocationAccuracyLevel === 'rough'
-                  ? 'text-yellow-700'
-                  : 'text-rose-700'
-            "
-          >
-            {{ currentLocationAccuracyMessage }}
-          </p>
-          <p class="mt-1">
-            緯度：{{ currentLocation.latitude.toFixed(6) }} /
-            経度：{{ currentLocation.longitude.toFixed(6) }}
-          </p>
-        </div>
-
-        <p
-          v-if="geolocationErrorMessage"
-          class="mt-3 rounded-2xl bg-rose-50 px-4 py-3 text-xs leading-6 text-rose-700"
-        >
-          {{ geolocationErrorMessage }}
-        </p>
-
-        <p
-          v-if="!isGeolocationSupported"
-          class="mt-3 rounded-2xl bg-rose-50 px-4 py-3 text-xs leading-6 text-rose-700"
-        >
-          このブラウザでは位置情報を利用できません。
-        </p>
-      </div>
-
-      <div
-        v-if="showGeolocationFallback"
-        class="mt-4 rounded-2xl border border-rose-100 bg-rose-50 p-4"
+      <!-- 現在地ステータス -->
+      <section
+        class="sticky top-0 z-30 -mx-4 mt-3 border-y-2 border-slate-800 bg-white px-4 py-3"
       >
-        <h3 class="text-sm font-bold text-rose-800">
-          {{ geolocationFallbackTitle }}
-        </h3>
-
-        <p class="mt-2 text-xs leading-6 text-rose-700">
-          {{ geolocationFallbackDescription }}
-        </p>
-
-        <ul class="mt-3 space-y-2">
-          <li
-            v-for="tip in geolocationFallbackTips"
-            :key="tip"
-            class="flex gap-2 text-xs leading-6 text-rose-700"
-          >
-            <span class="mt-1 block size-1.5 shrink-0 rounded-full bg-rose-400" />
-            <span>{{ tip }}</span>
-          </li>
-        </ul>
-      </div>
-
-      <div class="mt-4 flex flex-wrap gap-2">
-        <span class="rounded-full bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-600">
-          座標あり：{{ mappableSpots.length }}件
-        </span>
-
-        <span class="rounded-full bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-600">
-          座標未設定：{{ unmappedSpots.length }}件
-        </span>
-      </div>
-
-      <div class="mt-4 rounded-2xl bg-slate-50 px-4 py-3">
-        <p class="text-xs leading-6 text-slate-500">
-          公式マップ画像は使用せず、スポットデータの座標をもとに地図表示します。
-          現在地は端末内で取得して表示するだけで、サーバーには保存しません。
-          位置情報が使えない場合でも、スポット一覧はそのまま利用できます。
-        </p>
-      </div>
-    </section>
-
-    <!-- 重要スポット -->
-    <section class="mt-6">
-      <div class="flex items-center justify-between gap-3">
-        <div>
-          <h2 class="text-lg font-bold text-slate-900">
-            まず確認したい場所
-          </h2>
-          <p class="mt-1 text-xs text-slate-500">
-            入口・休憩・給水・救護など、当日使う可能性が高いスポットです。
-          </p>
-        </div>
-      </div>
-
-      <div class="mt-3 flex gap-3 overflow-x-auto pb-2">
-        <article
-          v-for="spot in importantSpots"
-          :key="spot.id"
-          class="min-w-[220px] rounded-2xl border border-sky-100 bg-white p-4 shadow-sm"
-        >
-          <div class="flex items-center gap-2">
-            <span class="text-xl">
-              {{ getSpotCategory(spot.category)?.icon }}
-            </span>
-            <span class="rounded-full bg-sky-50 px-2.5 py-1 text-xs font-bold text-sky-600">
-              {{ getSpotCategory(spot.category)?.label }}
-            </span>
+        <div class="grid grid-cols-3 gap-2 text-center">
+          <div class="border-r border-slate-300 pr-2">
+            <p class="text-xs font-black text-slate-500">
+              現在地
+            </p>
+            <p
+              class="mt-1 text-base font-black leading-none"
+              :class="currentLocation ? 'text-sky-700' : 'text-orange-700'"
+            >
+              {{ locationStatusText }}
+            </p>
           </div>
 
-          <h3 class="mt-3 text-sm font-bold leading-6 text-slate-900">
-            {{ spot.name }}
-          </h3>
+          <div class="border-r border-slate-300 px-2">
+            <p class="text-xs font-black text-slate-500">
+              誤差
+            </p>
+            <p class="mt-1 text-base font-black leading-none">
+              {{ accuracyText }}
+            </p>
+          </div>
 
-          <p class="mt-2 line-clamp-3 text-xs leading-6 text-slate-600">
-            {{ spot.description }}
-          </p>
-        </article>
-      </div>
-    </section>
+          <div class="pl-2">
+            <p class="text-xs font-black text-slate-500">
+              スポット
+            </p>
+            <p class="mt-1 text-base font-black leading-none">
+              {{ filteredSpots.length }}件
+            </p>
+          </div>
+        </div>
 
-    <!-- フィルター -->
-    <section class="mt-6 rounded-3xl border border-slate-100 bg-white p-4 shadow-sm">
-      <div class="flex items-center justify-between gap-3">
-        <div>
-          <h2 class="text-base font-bold text-slate-900">
-            スポットを探す
+        <p class="mt-2 text-right text-[11px] font-bold text-slate-500">
+          {{ updatedAtText }}
+        </p>
+
+        <div class="mt-3 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            class="border-2 border-slate-800 bg-slate-900 px-3 py-2 text-sm font-black text-white active:translate-y-[1px] disabled:opacity-60"
+            :disabled="isGettingLocation"
+            @click="getCurrentLocation"
+          >
+            {{ isGettingLocation ? '取得中' : '現在地を更新' }}
+          </button>
+
+          <button
+            type="button"
+            class="border-2 px-3 py-2 text-sm font-black active:translate-y-[1px]"
+            :class="
+              isFollowingLocation
+                ? 'border-orange-600 bg-orange-100 text-orange-950'
+                : 'border-slate-300 bg-white text-slate-800'
+            "
+            @click="
+              isFollowingLocation
+                ? stopFollowingLocation()
+                : startFollowingLocation()
+            "
+          >
+            {{ isFollowingLocation ? '追従を止める' : '追従する' }}
+          </button>
+        </div>
+
+        <p
+          v-if="locationErrorMessage"
+          class="mt-2 border-l-4 border-orange-500 bg-orange-50 px-2 py-2 text-xs font-bold leading-relaxed text-orange-950"
+        >
+          {{ locationErrorMessage }}
+        </p>
+      </section>
+
+      <!-- 地図 -->
+      <section class="mt-4">
+        <div class="mb-2 flex items-end justify-between gap-3">
+          <h2 class="text-base font-black">
+            地図
           </h2>
-          <p class="mt-1 text-xs text-slate-500">
-            カテゴリ・エリア・キーワードで絞り込めます。
+
+          <p class="text-xs font-black text-slate-500">
+            {{ selectedSpot ? selectedSpot.name : 'スポットを選択' }}
           </p>
         </div>
 
-        <button
-          type="button"
-          class="shrink-0 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-500"
-          @click="resetFilters"
-        >
-          リセット
-        </button>
-      </div>
+        <div class="overflow-hidden border-2 border-slate-800 bg-white">
+          <ClientOnly>
+            <SpotLeafletMap
+              :spots="filteredSpots"
+              :current-location="currentLocation"
+              :selected-spot-id="selectedSpotId"
+              :should-follow-current-location="isFollowingLocation"
+              :follow-request-key="followRequestKey"
+              @select-spot="selectSpot"
+            />
 
-      <div class="mt-4">
-        <label for="spot-keyword" class="text-xs font-bold text-slate-600">
-          キーワード
-        </label>
-        <input
-          id="spot-keyword"
-          v-model="keyword"
-          type="search"
-          placeholder="例：トイレ、給水、グッズ"
-          class="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-sky-300 focus:bg-white focus:ring-4 focus:ring-sky-100"
-        >
-      </div>
-
-      <div class="mt-4">
-        <p class="text-xs font-bold text-slate-600">
-          カテゴリ
-        </p>
-
-        <div class="mt-2 flex gap-2 overflow-x-auto pb-1">
-          <button
-            type="button"
-            class="shrink-0 rounded-full border px-3 py-2 text-xs font-bold transition"
-            :class="
-              selectedCategory === 'all'
-                ? 'border-sky-400 bg-sky-500 text-white'
-                : 'border-slate-200 bg-white text-slate-600'
-            "
-            @click="selectedCategory = 'all'"
-          >
-            すべて
-          </button>
-
-          <button
-            v-for="category in spotCategories"
-            :key="category.value"
-            type="button"
-            class="shrink-0 rounded-full border px-3 py-2 text-xs font-bold transition"
-            :class="
-              selectedCategory === category.value
-                ? 'border-sky-400 bg-sky-500 text-white'
-                : 'border-slate-200 bg-white text-slate-600'
-            "
-            @click="selectedCategory = category.value"
-          >
-            <span class="mr-1">{{ category.icon }}</span>
-            {{ category.label }}
-          </button>
+            <template #fallback>
+              <div class="flex h-[320px] items-center justify-center bg-slate-100 px-4 text-center">
+                <p class="text-sm font-bold text-slate-600">
+                  地図を読み込み中です。
+                </p>
+              </div>
+            </template>
+          </ClientOnly>
         </div>
-      </div>
 
-      <div class="mt-4">
-        <p class="text-xs font-bold text-slate-600">
-          エリア
+        <p class="mt-2 text-xs font-bold leading-relaxed text-slate-500">
+          位置情報の誤差が大きい場合があります。現地の案内表示とあわせて確認してください。
         </p>
+      </section>
 
-        <div class="mt-2 flex gap-2 overflow-x-auto pb-1">
-          <button
-            type="button"
-            class="shrink-0 rounded-full border px-3 py-2 text-xs font-bold transition"
-            :class="
-              selectedArea === 'all'
-                ? 'border-yellow-400 bg-yellow-300 text-slate-900'
-                : 'border-slate-200 bg-white text-slate-600'
-            "
-            @click="selectedArea = 'all'"
-          >
-            すべて
-          </button>
-
-          <button
-            v-for="area in spotAreas"
-            :key="area.value"
-            type="button"
-            class="shrink-0 rounded-full border px-3 py-2 text-xs font-bold transition"
-            :class="
-              selectedArea === area.value
-                ? 'border-yellow-400 bg-yellow-300 text-slate-900'
-                : 'border-slate-200 bg-white text-slate-600'
-            "
-            @click="selectedArea = area.value"
-          >
-            {{ area.label }}
-          </button>
-        </div>
-      </div>
-
-      <label class="mt-4 flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3">
-        <input
-          v-model="importantOnly"
-          type="checkbox"
-          class="size-5 rounded border-slate-300 text-sky-500 focus:ring-sky-200"
-        >
-        <span class="text-sm font-bold text-slate-700">
-          重要スポットだけ表示する
-        </span>
-      </label>
-    </section>
-
-    <!-- 件数 -->
-    <div class="mt-5 flex items-center justify-between">
-      <p class="text-sm font-bold text-slate-700">
-        {{ filteredSpots.length }}件のスポット
-      </p>
-
-      <p class="text-xs text-slate-400">
-        仮データを含みます
-      </p>
-    </div>
-
-    <!-- スポット一覧 -->
-    <section class="mt-3 space-y-3">
-      <article
-        v-for="spot in filteredSpots"
-        :key="spot.id"
-        class="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm"
+      <!-- 選択中スポット -->
+      <section
+        v-if="selectedSpot"
+        class="mt-4 border-l-4 border-sky-500 bg-sky-50 px-3 py-3"
       >
         <div class="flex items-start justify-between gap-3">
-          <div class="flex min-w-0 items-start gap-3">
-            <div class="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-50 text-xl">
-              {{ getSpotCategory(spot.category)?.icon }}
+          <div class="min-w-0">
+            <div class="flex flex-wrap items-center gap-2">
+              <span
+                class="border px-1.5 py-0.5 text-[10px] font-black"
+                :class="getCategoryClass(selectedSpot.category)"
+              >
+                {{ getCategoryLabel(selectedSpot.category) }}
+              </span>
+
+              <span class="border border-slate-300 bg-white px-1.5 py-0.5 text-[10px] font-black text-slate-600">
+                {{ getAreaLabel(selectedSpot.area) }}
+              </span>
+
+              <span
+                v-if="selectedSpot.coordinateStatus === 'approximate'"
+                class="border border-orange-500 bg-orange-50 px-1.5 py-0.5 text-[10px] font-black text-orange-700"
+              >
+                おおよそ
+              </span>
             </div>
 
-            <div class="min-w-0">
-              <div class="flex flex-wrap items-center gap-2">
-                <span class="rounded-full bg-sky-50 px-2.5 py-1 text-xs font-bold text-sky-600">
-                  {{ getSpotCategory(spot.category)?.label }}
-                </span>
+            <h2 class="mt-2 text-base font-black leading-snug text-sky-950">
+              {{ selectedSpot.name }}
+            </h2>
 
-                <span
-                  class="rounded-full border px-2.5 py-1 text-xs font-bold"
-                  :class="getCoordinateStatusClass(spot.coordinateStatus)"
-                >
-                  {{ getCoordinateStatusLabel(spot.coordinateStatus) }}
-                </span>
+            <p class="mt-1 text-sm font-black text-sky-900">
+              {{ formatDistance(selectedSpot) }}
+            </p>
 
-                <span
-                  v-if="spot.isImportant"
-                  class="rounded-full bg-yellow-100 px-2.5 py-1 text-xs font-bold text-yellow-700"
-                >
-                  重要
-                </span>
-              </div>
-
-              <h2 class="mt-2 text-base font-bold leading-7 text-slate-900">
-                {{ spot.name }}
-              </h2>
-
-              <p class="mt-1 text-xs font-bold text-slate-500">
-                {{ getSpotArea(spot.area)?.label }}
-              </p>
-            </div>
+            <p
+              v-if="selectedSpot.description"
+              class="mt-1 text-sm font-medium leading-relaxed text-sky-950"
+            >
+              {{ selectedSpot.description }}
+            </p>
           </div>
         </div>
+      </section>
 
-        <p class="mt-3 text-sm leading-7 text-slate-600">
-          {{ spot.description }}
-        </p>
-
-        <p
-          v-if="spot.memo"
-          class="mt-3 rounded-2xl bg-yellow-50 px-4 py-3 text-xs leading-6 text-yellow-800"
-        >
-          {{ spot.memo }}
-        </p>
-
-        <div
-          v-if="spot.tags.length > 0"
-          class="mt-3 flex flex-wrap gap-2"
-        >
-          <span
-            v-for="tag in spot.tags"
-            :key="tag"
-            class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-500"
-          >
-            #{{ tag }}
-          </span>
+      <!-- カテゴリ -->
+      <section class="mt-4">
+        <div class="-mx-4 overflow-x-auto px-4">
+          <div class="flex w-max gap-2 pb-1">
+            <button
+              v-for="category in categoryFilters"
+              :key="category.id"
+              type="button"
+              class="border-2 px-3 py-2 text-xs font-black active:translate-y-[1px]"
+              :class="
+                selectedCategory === category.id
+                  ? 'border-slate-900 bg-slate-900 text-white'
+                  : 'border-slate-300 bg-white text-slate-700'
+              "
+              @click="selectCategory(category.id)"
+            >
+              {{ category.label }}
+            </button>
+          </div>
         </div>
-      </article>
+      </section>
 
-      <div
-        v-if="filteredSpots.length === 0"
-        class="rounded-3xl border border-dashed border-slate-200 bg-white p-8 text-center"
-      >
-        <p class="text-sm font-bold text-slate-700">
-          条件に合うスポットがありません
+      <!-- 近くのスポット -->
+      <section class="mt-4">
+        <div class="mb-2 flex items-end justify-between gap-3">
+          <h2 class="text-base font-black">
+            近くのスポット
+          </h2>
+
+          <p class="text-xs font-black text-slate-500">
+            {{ currentLocation ? '距離順' : 'カテゴリ順' }}
+          </p>
+        </div>
+
+        <ul class="border-y-2 border-slate-800 bg-white">
+          <li
+            v-for="spot in nearestSpots"
+            :key="spot.id"
+            class="border-b border-dashed border-slate-300 last:border-b-0"
+          >
+            <button
+              type="button"
+              class="block w-full px-3 py-3 text-left active:bg-slate-50"
+              :class="selectedSpotId === spot.id ? 'bg-sky-50' : ''"
+              @click="focusSpot(spot)"
+            >
+              <div class="flex items-start gap-3">
+                <div class="w-[4.8rem] shrink-0">
+                  <p class="text-sm font-black leading-tight text-sky-700">
+                    {{ formatDistance(spot) }}
+                  </p>
+                  <p class="mt-1 text-[10px] font-black text-slate-500">
+                    {{ getAreaLabel(spot.area) }}
+                  </p>
+                </div>
+
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span
+                      class="border px-1.5 py-0.5 text-[10px] font-black"
+                      :class="getCategoryClass(spot.category)"
+                    >
+                      {{ getCategoryLabel(spot.category) }}
+                    </span>
+
+                    <span
+                      v-if="spot.isImportant"
+                      class="border border-orange-500 bg-orange-50 px-1.5 py-0.5 text-[10px] font-black text-orange-700"
+                    >
+                      重要
+                    </span>
+                  </div>
+
+                  <p class="mt-1 text-base font-black leading-snug">
+                    {{ spot.name }}
+                  </p>
+
+                  <p
+                    v-if="spot.description"
+                    class="mt-1 line-clamp-2 text-sm font-medium leading-snug text-slate-600"
+                  >
+                    {{ spot.description }}
+                  </p>
+                </div>
+
+                <span class="shrink-0 text-lg font-black text-slate-400">
+                  →
+                </span>
+              </div>
+            </button>
+          </li>
+        </ul>
+      </section>
+
+      <!-- 現地メモ -->
+      <section class="mt-4 border-l-4 border-orange-500 bg-orange-50 px-3 py-3">
+        <h2 class="text-sm font-black text-orange-950">
+          マップ利用メモ
+        </h2>
+        <p class="mt-1 text-sm font-medium leading-relaxed text-orange-950">
+          GPSは建物内・混雑時・電波状況でずれることがあります。トイレ、救護、交通は現地の案内表示もあわせて確認してください。
         </p>
-        <p class="mt-2 text-xs leading-6 text-slate-500">
-          キーワードやカテゴリを変更して探してください。
-        </p>
-
-        <button
-          type="button"
-          class="mt-4 rounded-full bg-sky-500 px-5 py-2.5 text-sm font-bold text-white shadow-sm"
-          @click="resetFilters"
-        >
-          条件をリセットする
-        </button>
-      </div>
-    </section>
-
-    <!-- 注意書き -->
-    <section class="mt-6 rounded-3xl bg-slate-50 p-4">
-      <h2 class="text-sm font-bold text-slate-800">
-        位置情報について
-      </h2>
-
-      <p class="mt-2 text-xs leading-6 text-slate-500">
-        現在はスポット一覧のみの仮表示です。正式な会場情報が出た後、座標や地図表示を追加します。
-        公式マップ画像の無断転載は避け、必要に応じて公式サイトへのリンクで案内します。
-      </p>
-    </section>
-  </div>
+      </section>
+    </div>
+  </main>
 </template>
+
+<style scoped>
+main {
+  font-family:
+    'Noto Sans JP',
+    'BIZ UDPGothic',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+}
+
+h1,
+h2 {
+  font-family:
+    'Zen Kaku Gothic New',
+    'Noto Sans JP',
+    system-ui,
+    sans-serif;
+}
+</style>

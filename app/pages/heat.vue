@@ -1,280 +1,490 @@
 <script setup lang="ts">
-import {
-  emergencySteps,
-  heatActions,
-  heatItems,
-  heatWarnings,
-  officialHeatLinks,
-  type HeatInfoItem,
-} from '~/data/heat'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+
+type HeatAction = {
+  id: string
+  title: string
+  description: string
+  level: 'normal' | 'important'
+}
+
+type HeatLog = {
+  drinkCount: number
+  lastDrinkAt: string | null
+  checkedActionIds: string[]
+  restMemo: string
+}
+
+const STORAGE_KEY = 'hinatafes-heat-log-v2'
 
 useAppSeo({
   title: '熱中症対策',
   description:
-    'ひなたフェス2026の宮崎遠征・屋外イベント参加時に確認したい熱中症対策メモです。水分補給、休憩、暑さ対策グッズなどをスマホで確認できます。',
-  path: '/heat',
+    'ひなたフェス2026の現地で確認できる熱中症対策ページです。水分補給、休憩、危険サイン、救護・休憩場所の確認に使えます。',
 })
 
-const getPriorityClass = (item: HeatInfoItem) => {
-  if (item.priority === 'high') {
-    return 'border-orange-200 bg-orange-50'
+const currentTimeText = ref('')
+const drinkCount = ref(0)
+const lastDrinkAt = ref<string | null>(null)
+const checkedActionIds = ref<string[]>([])
+const restMemo = ref('')
+const hasMounted = ref(false)
+
+let timerId: number | undefined
+
+const heatActions: HeatAction[] = [
+  {
+    id: 'drink',
+    title: '水分を飲む',
+    description: 'のどが渇く前に少しずつ飲む',
+    level: 'important',
+  },
+  {
+    id: 'salt',
+    title: '塩分を取る',
+    description: '汗をかいたら塩分も意識する',
+    level: 'normal',
+  },
+  {
+    id: 'shade',
+    title: '日陰・屋内に移動',
+    description: '直射日光を避けて体温を下げる',
+    level: 'important',
+  },
+  {
+    id: 'rest',
+    title: '無理せず休む',
+    description: '予定より体調を優先する',
+    level: 'important',
+  },
+  {
+    id: 'cool',
+    title: '首・わき・手首を冷やす',
+    description: '冷感グッズやタオルを使う',
+    level: 'normal',
+  },
+]
+
+const dangerSigns = [
+  'めまい',
+  '頭痛',
+  '吐き気',
+  '手足のしびれ',
+  '汗が止まらない',
+  'ぼーっとする',
+  'まっすぐ歩けない',
+  '返事がおかしい',
+]
+
+const checkedActionCount = computed(() => {
+  return heatActions.filter((action) => checkedActionIds.value.includes(action.id)).length
+})
+
+const actionProgressText = computed(() => {
+  return `${checkedActionCount.value} / ${heatActions.length}`
+})
+
+const lastDrinkText = computed(() => {
+  if (!lastDrinkAt.value) {
+    return 'まだ記録なし'
   }
 
-  return 'border-slate-100 bg-white'
-}
+  return `${lastDrinkAt.value} に記録`
+})
 
-const getPriorityLabelClass = (item: HeatInfoItem) => {
-  if (item.priority === 'high') {
-    return 'bg-orange-100 text-orange-700'
+const heatStatusText = computed(() => {
+  if (drinkCount.value === 0) {
+    return 'まず水分を確認'
   }
 
-  return 'bg-slate-100 text-slate-600'
+  if (checkedActionCount.value < 2) {
+    return '休憩も確認'
+  }
+
+  return 'こまめに継続'
+})
+
+const isChecked = (actionId: string) => {
+  return checkedActionIds.value.includes(actionId)
 }
+
+const toggleAction = (actionId: string) => {
+  if (isChecked(actionId)) {
+    checkedActionIds.value = checkedActionIds.value.filter((id) => id !== actionId)
+    return
+  }
+
+  checkedActionIds.value = [...checkedActionIds.value, actionId]
+}
+
+const formatCurrentTime = () => {
+  const now = new Date()
+  const hours = String(now.getHours()).padStart(2, '0')
+  const minutes = String(now.getMinutes()).padStart(2, '0')
+
+  return `${hours}:${minutes}`
+}
+
+const updateCurrentTime = () => {
+  currentTimeText.value = formatCurrentTime()
+}
+
+const recordDrink = () => {
+  drinkCount.value += 1
+  lastDrinkAt.value = formatCurrentTime()
+
+  if (!checkedActionIds.value.includes('drink')) {
+    checkedActionIds.value = [...checkedActionIds.value, 'drink']
+  }
+}
+
+const resetTodayLog = () => {
+  drinkCount.value = 0
+  lastDrinkAt.value = null
+  checkedActionIds.value = []
+  restMemo.value = ''
+}
+
+const loadFromStorage = () => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY)
+
+    if (!saved) {
+      return
+    }
+
+    const parsed = JSON.parse(saved) as Partial<HeatLog>
+
+    drinkCount.value = Number(parsed.drinkCount ?? 0)
+    lastDrinkAt.value = parsed.lastDrinkAt ?? null
+    checkedActionIds.value = Array.isArray(parsed.checkedActionIds)
+      ? parsed.checkedActionIds
+      : []
+    restMemo.value = parsed.restMemo ?? ''
+  } catch {
+    drinkCount.value = 0
+    lastDrinkAt.value = null
+    checkedActionIds.value = []
+    restMemo.value = ''
+  }
+}
+
+const saveToStorage = () => {
+  if (!hasMounted.value) {
+    return
+  }
+
+  const log: HeatLog = {
+    drinkCount: drinkCount.value,
+    lastDrinkAt: lastDrinkAt.value,
+    checkedActionIds: checkedActionIds.value,
+    restMemo: restMemo.value,
+  }
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(log))
+}
+
+onMounted(() => {
+  updateCurrentTime()
+  loadFromStorage()
+  hasMounted.value = true
+
+  timerId = window.setInterval(updateCurrentTime, 60_000)
+})
+
+onUnmounted(() => {
+  if (timerId) {
+    window.clearInterval(timerId)
+  }
+})
+
+watch([drinkCount, lastDrinkAt, checkedActionIds, restMemo], saveToStorage, {
+  deep: true,
+})
 </script>
 
 <template>
-  <main class="mx-auto max-w-3xl px-4 pb-24 pt-6">
-    <section class="rounded-3xl bg-gradient-to-br from-orange-100 via-white to-sky-50 p-5 shadow-sm">
-      <p class="text-sm font-bold text-orange-600">
-        Heat Safety
-      </p>
+  <main class="min-h-screen bg-[#f7fbfc] pb-24 text-slate-900">
+    <div class="mx-auto max-w-md px-4 py-4">
+      <!-- ヘッダー -->
+      <section class="border-b-4 border-orange-500 pb-3">
+        <p class="text-xs font-black tracking-[0.16em] text-orange-700">
+          HEAT CARE
+        </p>
 
-      <h1 class="mt-2 text-2xl font-bold text-slate-900">
-        熱中症対策
-      </h1>
+        <div class="mt-1 flex items-end justify-between gap-3">
+          <div>
+            <h1 class="text-[1.35rem] font-black leading-tight">
+              熱中症対策
+            </h1>
+            <p class="mt-1 text-sm font-medium leading-snug text-slate-700">
+              暑さを感じる前に、水分・休憩を確認します。
+            </p>
+          </div>
 
-      <p class="mt-3 text-sm leading-7 text-slate-600">
-        屋外イベントでは、楽しむ前に体調管理が最優先です。
-        水分補給、休憩、暑さ対策をこまめに確認しましょう。
-      </p>
-    </section>
+          <NuxtLink
+            to="/"
+            class="shrink-0 border-2 border-slate-800 bg-white px-2 py-1 text-xs font-black active:bg-slate-100"
+          >
+            TOP
+          </NuxtLink>
+        </div>
+      </section>
 
-    <section class="mt-6 rounded-3xl border border-red-100 bg-red-50 p-4">
-      <div class="flex gap-3">
-        <div class="text-2xl">
-          🚨
+      <!-- 固定ステータス -->
+      <section
+        class="sticky top-0 z-20 -mx-4 mt-3 border-y-2 border-slate-800 bg-white px-4 py-3"
+      >
+        <div class="grid grid-cols-3 gap-2 text-center">
+          <div class="border-r border-slate-300 pr-2">
+            <p class="text-xs font-black text-slate-500">
+              現在
+            </p>
+            <p class="mt-1 text-xl font-black leading-none">
+              {{ currentTimeText }}
+            </p>
+          </div>
+
+          <div class="border-r border-slate-300 px-2">
+            <p class="text-xs font-black text-slate-500">
+              水分
+            </p>
+            <p class="mt-1 text-xl font-black leading-none text-sky-700">
+              {{ drinkCount }}回
+            </p>
+          </div>
+
+          <div class="pl-2">
+            <p class="text-xs font-black text-slate-500">
+              確認
+            </p>
+            <p class="mt-1 text-xl font-black leading-none text-orange-700">
+              {{ actionProgressText }}
+            </p>
+          </div>
         </div>
 
-        <div>
-          <h2 class="text-sm font-bold text-red-700">
-            危険な症状がある場合
-          </h2>
+        <div class="mt-3 flex items-center justify-between gap-3 border-l-4 border-orange-500 bg-orange-50 px-2 py-2">
+          <div class="min-w-0">
+            <p class="text-xs font-black text-orange-800">
+              {{ heatStatusText }}
+            </p>
+            <p class="mt-0.5 text-xs font-bold leading-snug text-orange-950">
+              {{ lastDrinkText }}
+            </p>
+          </div>
 
-          <p class="mt-2 text-xs leading-6 text-red-700">
-            自力で水が飲めない、意識がない、反応がおかしい場合は、
-            すぐに周囲の人やスタッフへ知らせ、必要に応じて119番に連絡してください。
+          <button
+            type="button"
+            class="shrink-0 border-2 border-slate-900 bg-slate-900 px-3 py-2 text-xs font-black text-white active:translate-y-[1px]"
+            @click="recordDrink"
+          >
+            水分を飲んだ
+          </button>
+        </div>
+      </section>
+
+      <!-- まずやること -->
+      <section class="mt-4">
+        <div class="mb-2 flex items-end justify-between gap-3">
+          <h2 class="text-base font-black">
+            まずやること
+          </h2>
+          <p class="text-xs font-black text-slate-500">
+            チェックして確認
           </p>
         </div>
-      </div>
-    </section>
 
-    <section class="mt-6">
-      <div class="flex items-end justify-between">
-        <div>
-          <h2 class="text-lg font-bold text-slate-900">
-            今すぐやること
-          </h2>
+        <ul class="border-y-2 border-slate-800 bg-white">
+          <li
+            v-for="action in heatActions"
+            :key="action.id"
+            class="border-b border-dashed border-slate-300 last:border-b-0"
+          >
+            <div
+              class="flex items-start gap-3 px-3 py-3"
+              :class="isChecked(action.id) ? 'bg-slate-50 text-slate-500' : ''"
+            >
+              <button
+                type="button"
+                class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center border-2 border-slate-800 text-base font-black"
+                :class="
+                  isChecked(action.id)
+                    ? 'bg-orange-400 text-slate-950'
+                    : 'bg-white text-transparent'
+                "
+                :aria-pressed="isChecked(action.id)"
+                @click="toggleAction(action.id)"
+              >
+                ✓
+              </button>
 
-          <p class="mt-1 text-xs text-slate-500">
-            現地で何度も確認する基本行動です。
-          </p>
-        </div>
-      </div>
+              <button
+                type="button"
+                class="min-w-0 flex-1 text-left"
+                @click="toggleAction(action.id)"
+              >
+                <div class="flex flex-wrap items-center gap-2">
+                  <p
+                    class="text-base font-black leading-snug"
+                    :class="isChecked(action.id) ? 'line-through' : ''"
+                  >
+                    {{ action.title }}
+                  </p>
 
-      <div class="mt-4 grid gap-3">
-        <article
-          v-for="item in heatActions"
-          :key="item.id"
-          class="rounded-3xl border p-4 shadow-sm"
-          :class="getPriorityClass(item)"
-        >
-          <div class="flex gap-3">
-            <div class="text-2xl">
-              {{ item.icon }}
-            </div>
+                  <span
+                    v-if="action.level === 'important'"
+                    class="border border-orange-500 bg-orange-50 px-1.5 py-0.5 text-[10px] font-black text-orange-700"
+                  >
+                    優先
+                  </span>
+                </div>
 
-            <div class="min-w-0 flex-1">
-              <div class="flex items-center gap-2">
-                <h3 class="text-base font-bold text-slate-900">
-                  {{ item.title }}
-                </h3>
-
-                <span
-                  v-if="item.priority === 'high'"
-                  class="rounded-full px-2 py-0.5 text-[11px] font-bold"
-                  :class="getPriorityLabelClass(item)"
+                <p
+                  class="mt-1 text-sm font-medium leading-snug text-slate-600"
+                  :class="isChecked(action.id) ? 'line-through' : ''"
                 >
-                  重要
-                </span>
-              </div>
-
-              <p class="mt-2 text-sm leading-7 text-slate-600">
-                {{ item.description }}
-              </p>
+                  {{ action.description }}
+                </p>
+              </button>
             </div>
-          </div>
-        </article>
-      </div>
-    </section>
+          </li>
+        </ul>
+      </section>
 
-    <section class="mt-6">
-      <h2 class="text-lg font-bold text-slate-900">
-        持っておきたいもの
-      </h2>
-
-      <div class="mt-4 grid grid-cols-2 gap-3">
-        <article
-          v-for="item in heatItems"
-          :key="item.id"
-          class="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm"
-        >
-          <div class="text-2xl">
-            {{ item.icon }}
+      <!-- 危険サイン -->
+      <section class="mt-5 border-2 border-red-600 bg-red-50 px-3 py-3">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <p class="text-xs font-black tracking-[0.12em] text-red-700">
+              WARNING
+            </p>
+            <h2 class="mt-1 text-base font-black text-red-950">
+              危険サイン
+            </h2>
           </div>
 
-          <h3 class="mt-3 text-sm font-bold text-slate-900">
-            {{ item.title }}
-          </h3>
-
-          <p class="mt-2 text-xs leading-6 text-slate-600">
-            {{ item.description }}
+          <p class="shrink-0 border-2 border-red-700 bg-white px-2 py-1 text-xs font-black text-red-800">
+            無理しない
           </p>
-        </article>
-      </div>
-    </section>
+        </div>
 
-    <section class="mt-6">
-      <div class="rounded-3xl bg-white p-4 shadow-sm">
-        <h2 class="text-lg font-bold text-slate-900">
-          休憩の目安
+        <div class="mt-3 flex flex-wrap gap-2">
+          <span
+            v-for="sign in dangerSigns"
+            :key="sign"
+            class="border border-red-300 bg-white px-2 py-1 text-sm font-black text-red-900"
+          >
+            {{ sign }}
+          </span>
+        </div>
+
+        <p class="mt-3 text-sm font-bold leading-relaxed text-red-950">
+          体調に違和感がある場合は、予定を優先せず、涼しい場所・救護・スタッフ確認を優先してください。
+        </p>
+      </section>
+
+      <!-- 会場内の確認導線 -->
+      <section class="mt-5">
+        <h2 class="mb-2 text-base font-black">
+          会場で確認する場所
         </h2>
 
-        <div class="mt-4 space-y-3">
-          <div class="rounded-2xl bg-sky-50 p-4">
-            <p class="text-sm font-bold text-sky-700">
-              1〜2時間に1回ではなく、暑い日はもっとこまめに
+        <div class="grid grid-cols-2 gap-2">
+          <NuxtLink
+            to="/map"
+            class="border-2 border-sky-600 bg-sky-50 px-3 py-3 active:translate-y-[1px]"
+          >
+            <p class="text-[10px] font-black tracking-[0.12em] text-sky-700">
+              MAP
             </p>
-
-            <p class="mt-2 text-xs leading-6 text-slate-600">
-              混雑、直射日光、移動距離、睡眠不足によって体への負担は大きく変わります。
-              「まだ大丈夫」と思っても、早めに休憩を入れましょう。
+            <p class="mt-1 text-sm font-black text-sky-950">
+              救護・休憩場所
             </p>
-          </div>
-
-          <div class="rounded-2xl bg-yellow-50 p-4">
-            <p class="text-sm font-bold text-yellow-700">
-              ライブ前に体力を使い切らない
+            <p class="mt-1 text-xs font-bold text-sky-900">
+              マップで確認
             </p>
+          </NuxtLink>
 
-            <p class="mt-2 text-xs leading-6 text-slate-600">
-              グッズ、フード、撮影を回る場合は、開場前に休憩時間を確保しておくのがおすすめです。
+          <NuxtLink
+            to="/checklist"
+            class="border-2 border-slate-300 bg-white px-3 py-3 active:bg-slate-50"
+          >
+            <p class="text-[10px] font-black tracking-[0.12em] text-slate-500">
+              GOODS
+            </p>
+            <p class="mt-1 text-sm font-black">
+              暑さ対策グッズ
+            </p>
+            <p class="mt-1 text-xs font-bold text-slate-600">
+              持ち物を確認
+            </p>
+          </NuxtLink>
+        </div>
+      </section>
+
+      <!-- 休憩メモ -->
+      <section class="mt-5 border-2 border-dashed border-slate-300 bg-white p-3">
+        <div class="flex items-center justify-between gap-2">
+          <div>
+            <h2 class="text-base font-black">
+              休憩メモ
+            </h2>
+            <p class="mt-0.5 text-xs font-medium text-slate-600">
+              どこで休むか、合流場所などを残せます。
             </p>
           </div>
         </div>
-      </div>
-    </section>
 
-    <section class="mt-6">
-      <h2 class="text-lg font-bold text-slate-900">
-        危険サイン
-      </h2>
+        <textarea
+          v-model="restMemo"
+          rows="4"
+          placeholder="例：木の花ドーム付近で休憩、14:30に集合 など"
+          class="mt-3 w-full resize-none border-2 border-slate-300 bg-white px-3 py-2 text-base font-medium leading-relaxed outline-none focus:border-sky-500"
+        />
+      </section>
 
-      <p class="mt-1 text-xs text-slate-500">
-        当てはまる場合は、予定を止めて体調確認を優先してください。
-      </p>
-
-      <div class="mt-4 grid gap-3">
-        <article
-          v-for="item in heatWarnings"
-          :key="item.id"
-          class="rounded-3xl border border-red-100 bg-white p-4 shadow-sm"
+      <!-- 操作 -->
+      <section class="mt-5">
+        <button
+          type="button"
+          class="w-full border-2 border-slate-300 bg-white px-3 py-2 text-sm font-black text-red-700 active:bg-red-50"
+          @click="resetTodayLog"
         >
-          <div class="flex gap-3">
-            <div class="text-2xl">
-              {{ item.icon }}
-            </div>
+          今日の記録をリセット
+        </button>
+      </section>
 
-            <div>
-              <h3 class="text-base font-bold text-red-700">
-                {{ item.title }}
-              </h3>
-
-              <p class="mt-2 text-sm leading-7 text-slate-600">
-                {{ item.description }}
-              </p>
-            </div>
-          </div>
-        </article>
-      </div>
-    </section>
-
-    <section class="mt-6">
-      <h2 class="text-lg font-bold text-slate-900">
-        体調が悪くなったら
-      </h2>
-
-      <div class="mt-4 overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm">
-        <article
-          v-for="step in emergencySteps"
-          :key="step.id"
-          class="border-b border-slate-100 p-4 last:border-b-0"
-        >
-          <div class="flex gap-3">
-            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-100 text-sm font-bold text-orange-700">
-              {{ step.icon }}
-            </div>
-
-            <div>
-              <h3 class="text-base font-bold text-slate-900">
-                {{ step.title }}
-              </h3>
-
-              <p class="mt-2 text-sm leading-7 text-slate-600">
-                {{ step.description }}
-              </p>
-            </div>
-          </div>
-        </article>
-      </div>
-    </section>
-
-    <section class="mt-6">
-      <h2 class="text-lg font-bold text-slate-900">
-        公式情報リンク
-      </h2>
-
-      <div class="mt-4 space-y-3">
-        <a
-          v-for="link in officialHeatLinks"
-          :key="link.id"
-          :href="link.url"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="block rounded-3xl border border-slate-100 bg-white p-4 shadow-sm transition hover:bg-sky-50"
-        >
-          <p class="text-sm font-bold text-sky-700">
-            {{ link.title }}
-          </p>
-
-          <p class="mt-2 text-xs leading-6 text-slate-600">
-            {{ link.description }}
-          </p>
-
-          <p class="mt-3 text-xs font-bold text-slate-400">
-            外部サイトを開く →
-          </p>
-        </a>
-      </div>
-    </section>
-
-    <section class="mt-6 rounded-3xl bg-slate-50 p-4">
-      <h2 class="text-sm font-bold text-slate-800">
-        注意
-      </h2>
-
-      <p class="mt-2 text-xs leading-6 text-slate-600">
-        このページは現地での確認用メモです。体調不良時は無理をせず、公式案内、会場スタッフ、医療機関の指示を優先してください。
-      </p>
-    </section>
+      <!-- 現地メモ -->
+      <section class="mt-4 border-l-4 border-sky-500 bg-sky-50 px-3 py-3">
+        <h2 class="text-sm font-black text-sky-950">
+          現地メモ
+        </h2>
+        <p class="mt-1 text-sm font-medium leading-relaxed text-sky-950">
+          暑い日は「まだ大丈夫」と思う前に休憩。移動・待機・開演前のタイミングで、こまめに水分を確認してください。
+        </p>
+      </section>
+    </div>
   </main>
 </template>
+
+<style scoped>
+main {
+  font-family:
+    'Noto Sans JP',
+    'BIZ UDPGothic',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+}
+
+h1,
+h2 {
+  font-family:
+    'Zen Kaku Gothic New',
+    'Noto Sans JP',
+    system-ui,
+    sans-serif;
+}
+</style>
