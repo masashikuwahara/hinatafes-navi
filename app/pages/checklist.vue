@@ -29,6 +29,7 @@ type ItemEdit = {
 const CHECKED_STORAGE_KEY = 'hinatafes-checklist-checked-v2'
 const CUSTOM_STORAGE_KEY = 'hinatafes-checklist-custom-v2'
 const EDIT_STORAGE_KEY = 'hinatafes-checklist-edits-v2'
+const DELETED_STORAGE_KEY = 'hinatafes-checklist-deleted-v2'
 
 useAppSeo({
   title: '持ち物チェックリスト',
@@ -39,6 +40,7 @@ useAppSeo({
 const checkedIds = ref<string[]>([])
 const customItems = ref<DisplayChecklistItem[]>([])
 const itemEdits = ref<Record<string, ItemEdit>>({})
+const deletedItemIds = ref<string[]>([])
 
 const activeCategoryId = ref('')
 const newItemTitle = ref('')
@@ -109,8 +111,12 @@ const baseItems = computed<DisplayChecklistItem[]>(() => {
   return checklistItems.map((item, index) => normalizeChecklistItem(item, index))
 })
 
+const visibleBaseItems = computed<DisplayChecklistItem[]>(() => {
+  return baseItems.value.filter((item) => !deletedItemIds.value.includes(item.id))
+})
+
 const allItems = computed<DisplayChecklistItem[]>(() => {
-  return [...baseItems.value, ...customItems.value].map((item) => {
+  return [...visibleBaseItems.value, ...customItems.value].map((item) => {
     const edit = itemEdits.value[item.id]
 
     if (!edit) {
@@ -151,6 +157,22 @@ const progressPercent = computed(() => {
   }
 
   return Math.round((checkedCount.value / totalCount.value) * 100)
+})
+
+const isAllChecked = computed(() => {
+  return totalCount.value > 0 && uncheckedCount.value === 0
+})
+
+const progressStatusMessage = computed(() => {
+  if (totalCount.value === 0) {
+    return '項目がありません。必要な持ち物を追加できます。'
+  }
+
+  if (isAllChecked.value) {
+    return 'すべてOKです。忘れ物はありません。'
+  }
+
+  return `あと${uncheckedCount.value}件、未チェックがあります。`
 })
 
 const requiredRemainingItems = computed(() => {
@@ -237,13 +259,24 @@ const saveEdit = (item: DisplayChecklistItem) => {
   cancelEdit()
 }
 
-const deleteCustomItem = (itemId: string) => {
-  customItems.value = customItems.value.filter((item) => item.id !== itemId)
-  checkedIds.value = checkedIds.value.filter((id) => id !== itemId)
+const deleteChecklistItem = (item: DisplayChecklistItem) => {
+  checkedIds.value = checkedIds.value.filter((id) => id !== item.id)
 
   const nextEdits = { ...itemEdits.value }
-  delete nextEdits[itemId]
+  delete nextEdits[item.id]
   itemEdits.value = nextEdits
+
+  if (item.isCustom) {
+    customItems.value = customItems.value.filter(
+      (customItem) => customItem.id !== item.id,
+    )
+  } else {
+    deletedItemIds.value = Array.from(new Set([...deletedItemIds.value, item.id]))
+  }
+
+  if (editingItemId.value === item.id) {
+    cancelEdit()
+  }
 }
 
 const clearCheckedItems = () => {
@@ -253,9 +286,13 @@ const clearCheckedItems = () => {
 const resetCustomEdits = () => {
   customItems.value = []
   itemEdits.value = {}
+  deletedItemIds.value = []
+
   checkedIds.value = checkedIds.value.filter((id) =>
     baseItems.value.some((item) => item.id === id),
   )
+
+  cancelEdit()
 }
 
 const loadFromStorage = () => {
@@ -263,6 +300,7 @@ const loadFromStorage = () => {
     const savedChecked = localStorage.getItem(CHECKED_STORAGE_KEY)
     const savedCustom = localStorage.getItem(CUSTOM_STORAGE_KEY)
     const savedEdits = localStorage.getItem(EDIT_STORAGE_KEY)
+    const savedDeleted = localStorage.getItem(DELETED_STORAGE_KEY)
 
     if (savedChecked) {
       checkedIds.value = JSON.parse(savedChecked)
@@ -275,10 +313,15 @@ const loadFromStorage = () => {
     if (savedEdits) {
       itemEdits.value = JSON.parse(savedEdits)
     }
+
+    if (savedDeleted) {
+      deletedItemIds.value = JSON.parse(savedDeleted)
+    }
   } catch {
     checkedIds.value = []
     customItems.value = []
     itemEdits.value = {}
+    deletedItemIds.value = []
   }
 }
 
@@ -290,6 +333,7 @@ const saveToStorage = () => {
   localStorage.setItem(CHECKED_STORAGE_KEY, JSON.stringify(checkedIds.value))
   localStorage.setItem(CUSTOM_STORAGE_KEY, JSON.stringify(customItems.value))
   localStorage.setItem(EDIT_STORAGE_KEY, JSON.stringify(itemEdits.value))
+  localStorage.setItem(DELETED_STORAGE_KEY, JSON.stringify(deletedItemIds.value))
 }
 
 onMounted(() => {
@@ -298,7 +342,7 @@ onMounted(() => {
   hasMounted.value = true
 })
 
-watch([checkedIds, customItems, itemEdits], saveToStorage, {
+watch([checkedIds, customItems, itemEdits, deletedItemIds], saveToStorage, {
   deep: true,
 })
 </script>
@@ -333,7 +377,7 @@ watch([checkedIds, customItems, itemEdits], saveToStorage, {
 
       <!-- 固定進捗 -->
       <section
-        class="sticky top-0 z-20 -mx-4 mt-3 border-y-2 border-slate-800 bg-white px-4 py-3"
+        class="sticky top-0 z-30 -mx-4 mt-3 border-y-2 border-slate-800 bg-white px-4 py-3 shadow-sm"
       >
         <div class="flex items-center justify-between gap-3">
           <div>
@@ -349,7 +393,10 @@ watch([checkedIds, customItems, itemEdits], saveToStorage, {
             <p class="text-xs font-black text-slate-500">
               未チェック
             </p>
-            <p class="mt-0.5 text-xl font-black leading-none text-orange-700">
+            <p
+              class="mt-0.5 text-xl font-black leading-none"
+              :class="isAllChecked ? 'text-emerald-700' : 'text-orange-700'"
+            >
               {{ uncheckedCount }}
             </p>
           </div>
@@ -360,6 +407,19 @@ watch([checkedIds, customItems, itemEdits], saveToStorage, {
             class="h-full bg-sky-400"
             :style="{ width: `${progressPercent}%` }"
           />
+        </div>
+
+        <div
+          class="mt-2 border-l-4 px-2 py-2"
+          :class="
+            isAllChecked
+              ? 'border-emerald-500 bg-emerald-50 text-emerald-950'
+              : 'border-sky-500 bg-sky-50 text-sky-950'
+          "
+        >
+          <p class="text-xs font-black">
+            {{ progressStatusMessage }}
+          </p>
         </div>
 
         <div
@@ -572,10 +632,9 @@ watch([checkedIds, customItems, itemEdits], saveToStorage, {
                 </button>
 
                 <button
-                  v-if="item.isCustom"
                   type="button"
                   class="border border-red-300 bg-white px-2 py-1 text-[11px] font-black text-red-600"
-                  @click="deleteCustomItem(item.id)"
+                  @click="deleteChecklistItem(item)"
                 >
                   削除
                 </button>
@@ -600,7 +659,7 @@ watch([checkedIds, customItems, itemEdits], saveToStorage, {
           class="border-2 border-slate-300 bg-white px-3 py-2 text-sm font-black text-red-700 active:bg-red-50"
           @click="resetCustomEdits"
         >
-          追加・編集を戻す
+          追加・編集・削除を戻す
         </button>
       </section>
 
