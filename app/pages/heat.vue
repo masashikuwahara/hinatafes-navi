@@ -208,14 +208,14 @@ watch([drinkCount, lastDrinkAt, checkedActionIds, restMemo], saveToStorage, {
   <main class="min-h-screen bg-[#f7fbfc] pb-24 text-slate-900">
     <div class="mx-auto max-w-md px-4 py-4">
       <!-- ヘッダー -->
-      <section class="border-b-4 border-orange-500 pb-3">
+      <section class="rounded-xl border border-orange-100 bg-white px-3 py-3 shadow-sm">
         <p class="text-xs font-black tracking-[0.16em] text-orange-700">
           HEAT CARE
         </p>
 
         <div class="mt-1 flex items-end justify-between gap-3">
           <div>
-            <h1 class="text-2xl font-black leading-tight tracking-tight">
+            <h1 class="text-[1.35rem] font-black leading-tight tracking-tight">
               ひなたフェス2026の暑さ対策・熱中症対策
             </h1>
             <p class="mt-1 text-sm font-medium leading-snug text-slate-700">
@@ -226,7 +226,7 @@ watch([drinkCount, lastDrinkAt, checkedActionIds, restMemo], saveToStorage, {
 
           <NuxtLink
             to="/"
-            class="shrink-0 border-2 border-slate-800 bg-white px-2 py-1 text-xs font-black active:bg-slate-100"
+            class="shrink-0 rounded-md border border-orange-200 bg-white px-2 py-1 text-xs font-black shadow-sm active:bg-orange-50"
           >
             TOP
           </NuxtLink>
@@ -235,10 +235,10 @@ watch([drinkCount, lastDrinkAt, checkedActionIds, restMemo], saveToStorage, {
 
       <!-- 固定ステータス -->
       <section
-        class="sticky top-0 z-20 -mx-4 mt-3 border-y-2 border-slate-800 bg-white px-4 py-3"
+        class="sticky top-0 z-20 -mx-4 mt-3 border-y border-orange-100 bg-white/95 px-4 py-3 shadow-sm backdrop-blur"
       >
         <div class="grid grid-cols-3 gap-2 text-center">
-          <div class="border-r border-slate-300 pr-2">
+          <div class="border-r border-slate-200 pr-2">
             <p class="text-xs font-black text-slate-500">
               現在
             </p>
@@ -247,7 +247,7 @@ watch([drinkCount, lastDrinkAt, checkedActionIds, restMemo], saveToStorage, {
             </p>
           </div>
 
-          <div class="border-r border-slate-300 px-2">
+          <div class="border-r border-slate-200 px-2">
             <p class="text-xs font-black text-slate-500">
               水分
             </p>
@@ -266,7 +266,7 @@ watch([drinkCount, lastDrinkAt, checkedActionIds, restMemo], saveToStorage, {
           </div>
         </div>
 
-        <div class="mt-3 flex items-center justify-between gap-3 border-l-4 border-orange-500 bg-orange-50 px-2 py-2">
+        <div class="mt-3 flex items-center justify-between gap-3 rounded-lg border border-orange-100 bg-orange-50/80 px-2 py-2">
           <div class="min-w-0">
             <p class="text-xs font-black text-orange-800">
               {{ heatStatusText }}
@@ -278,7 +278,7 @@ watch([drinkCount, lastDrinkAt, checkedActionIds, restMemo], saveToStorage, {
 
           <button
             type="button"
-            class="shrink-0 border-2 border-slate-900 bg-slate-900 px-3 py-2 text-xs font-black text-white active:translate-y-[1px]"
+            class="shrink-0 rounded-lg border border-orange-700 bg-orange-600 px-3 py-2 text-xs font-black text-white shadow-sm active:translate-y-[1px]"
             @click="recordDrink"
           >
             水分を飲んだ
@@ -297,19 +297,19 @@ watch([drinkCount, lastDrinkAt, checkedActionIds, restMemo], saveToStorage, {
           </p>
         </div>
 
-        <ul class="border-y-2 border-slate-800 bg-white">
+        <ul class="border-y border-slate-200 bg-white">
           <li
             v-for="action in heatActions"
             :key="action.id"
-            class="border-b border-dashed border-slate-300 last:border-b-0"
+            class="border-b border-dashed border-slate-200 last:border-b-0"
           >
             <div
               class="flex items-start gap-3 px-3 py-3"
-              :class="isChecked(action.id) ? 'bg-slate-50 text-slate-500' : ''"
+              :class="isChecked(action.id) ? 'bg-slate-50/80 text-slate-500' : ''"
             >
               <button
                 type="button"
-                class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center border-2 border-slate-800 text-base font-black"
+                class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-[4px] border border-slate-300 text-base font-black shadow-sm"
                 :class="
                   isChecked(action.id)
                     ? 'bg-orange-400 text-slate-950'
@@ -336,7 +336,7 @@ watch([drinkCount, lastDrinkAt, checkedActionIds, restMemo], saveToStorage, {
 
                   <span
                     v-if="action.level === 'important'"
-                    class="border border-orange-500 bg-orange-50 px-1.5 py-0.5 text-[10px] font-black text-orange-700"
+                    class="rounded-md border border-orange-200 bg-orange-50 px-1.5 py-0.5 text-[10px] font-black text-orange-700"
                   >
                     優先
                   </span>
@@ -355,7 +355,7 @@ watch([drinkCount, lastDrinkAt, checkedActionIds, restMemo], saveToStorage, {
       </section>
 
       <!-- 危険サイン -->
-      <section class="mt-5 border-2 border-red-600 bg-red-50 px-3 py-3">
+      <section class="mt-5 rounded-xl border border-red-200 bg-red-50/80 px-3 py-3 shadow-sm">
         <div class="flex items-center justify-between gap-3">
           <div>
             <p class="text-xs font-black tracking-[0.12em] text-red-700">
@@ -366,7 +366,7 @@ watch([drinkCount, lastDrinkAt, checkedActionIds, restMemo], saveToStorage, {
             </h2>
           </div>
 
-          <p class="shrink-0 border-2 border-red-700 bg-white px-2 py-1 text-xs font-black text-red-800">
+          <p class="shrink-0 rounded-md border border-red-200 bg-white px-2 py-1 text-xs font-black text-red-800 shadow-sm">
             無理しない
           </p>
         </div>
@@ -375,7 +375,7 @@ watch([drinkCount, lastDrinkAt, checkedActionIds, restMemo], saveToStorage, {
           <span
             v-for="sign in dangerSigns"
             :key="sign"
-            class="border border-red-300 bg-white px-2 py-1 text-sm font-black text-red-900"
+            class="rounded-md border border-red-200 bg-white px-2 py-1 text-sm font-black text-red-900"
           >
             {{ sign }}
           </span>
@@ -395,7 +395,7 @@ watch([drinkCount, lastDrinkAt, checkedActionIds, restMemo], saveToStorage, {
         <div class="grid grid-cols-2 gap-2">
           <NuxtLink
             to="/map"
-            class="border-2 border-sky-600 bg-sky-50 px-3 py-3 active:translate-y-[1px]"
+            class="rounded-lg border border-sky-200 bg-sky-50/80 px-3 py-3 shadow-sm active:translate-y-[1px]"
           >
             <p class="text-[10px] font-black tracking-[0.12em] text-sky-700">
               MAP
@@ -410,7 +410,7 @@ watch([drinkCount, lastDrinkAt, checkedActionIds, restMemo], saveToStorage, {
 
           <NuxtLink
             to="/checklist"
-            class="border-2 border-slate-300 bg-white px-3 py-3 active:bg-slate-50"
+            class="rounded-lg border border-slate-200 bg-white px-3 py-3 shadow-sm active:bg-slate-50"
           >
             <p class="text-[10px] font-black tracking-[0.12em] text-slate-500">
               GOODS
@@ -426,7 +426,7 @@ watch([drinkCount, lastDrinkAt, checkedActionIds, restMemo], saveToStorage, {
       </section>
 
       <!-- 休憩メモ -->
-      <section class="mt-5 border-2 border-dashed border-slate-300 bg-white p-3">
+      <section class="mt-5 rounded-xl border border-dashed border-slate-200 bg-white p-3 shadow-sm">
         <div class="flex items-center justify-between gap-2">
           <div>
             <h2 class="text-sm font-black text-sky-950">
@@ -444,7 +444,7 @@ watch([drinkCount, lastDrinkAt, checkedActionIds, restMemo], saveToStorage, {
           v-model="restMemo"
           rows="4"
           placeholder="例：木の花ドーム付近で休憩、14:30に集合 など"
-          class="mt-3 w-full resize-none border-2 border-slate-300 bg-white px-3 py-2 text-base font-medium leading-relaxed outline-none focus:border-sky-500"
+          class="mt-3 w-full resize-none rounded-lg border border-slate-200 bg-[#fffdf7] px-3 py-2 text-base font-medium leading-relaxed outline-none transition focus:border-sky-300 focus:bg-white"
         />
       </section>
 
@@ -452,7 +452,7 @@ watch([drinkCount, lastDrinkAt, checkedActionIds, restMemo], saveToStorage, {
       <section class="mt-5">
         <button
           type="button"
-          class="w-full border-2 border-slate-300 bg-white px-3 py-2 text-sm font-black text-red-700 active:bg-red-50"
+          class="w-full rounded-lg border border-red-100 bg-white px-3 py-2 text-sm font-black text-red-700 shadow-sm active:bg-red-50"
           @click="resetTodayLog"
         >
           今日の記録をリセット
@@ -460,7 +460,7 @@ watch([drinkCount, lastDrinkAt, checkedActionIds, restMemo], saveToStorage, {
       </section>
 
       <!-- 現地メモ -->
-      <section class="mt-4 border-l-4 border-sky-500 bg-sky-50 px-3 py-3">
+      <section class="mt-4 rounded-lg border border-sky-100 bg-sky-50/80 px-3 py-3 shadow-sm">
         <h2 class="text-sm font-black text-sky-950">
           現地メモ
         </h2>
@@ -475,8 +475,11 @@ watch([drinkCount, lastDrinkAt, checkedActionIds, restMemo], saveToStorage, {
 <style scoped>
 main {
   font-family:
-    'Noto Sans JP',
     'BIZ UDPGothic',
+    'Hiragino Maru Gothic ProN',
+    'Hiragino Sans',
+    'Noto Sans JP',
+    'Meiryo',
     system-ui,
     -apple-system,
     BlinkMacSystemFont,
@@ -486,8 +489,21 @@ main {
 h1,
 h2 {
   font-family:
+    'BIZ UDPGothic',
+    'Hiragino Maru Gothic ProN',
     'Zen Kaku Gothic New',
     'Noto Sans JP',
+    system-ui,
+    sans-serif;
+}
+
+textarea {
+  font-family:
+    'BIZ UDPGothic',
+    'Hiragino Maru Gothic ProN',
+    'Hiragino Sans',
+    'Noto Sans JP',
+    'Meiryo',
     system-ui,
     sans-serif;
 }

@@ -351,7 +351,7 @@ watch([checkedIds, customItems, itemEdits, deletedItemIds], saveToStorage, {
   <main class="min-h-screen bg-[#f7fbfc] pb-24 text-slate-900">
     <div class="mx-auto max-w-md px-4 py-4">
       <!-- 画面ヘッダー -->
-      <section class="border-b-4 border-sky-400 pb-3">
+      <section class="rounded-xl border border-sky-100 bg-white px-3 py-3 shadow-sm">
         <p class="text-xs font-black tracking-[0.16em] text-sky-700">
           CHECK LIST
         </p>
@@ -368,7 +368,7 @@ watch([checkedIds, customItems, itemEdits, deletedItemIds], saveToStorage, {
 
           <NuxtLink
             to="/"
-            class="shrink-0 border-2 border-slate-800 bg-white px-2 py-1 text-xs font-black active:bg-slate-100"
+            class="shrink-0 rounded-md border border-sky-200 bg-white px-2 py-1 text-xs font-black shadow-sm active:bg-sky-50"
           >
             TOP
           </NuxtLink>
@@ -377,7 +377,7 @@ watch([checkedIds, customItems, itemEdits, deletedItemIds], saveToStorage, {
 
       <!-- 固定進捗 -->
       <section
-        class="sticky top-0 z-30 -mx-4 mt-3 border-y-2 border-slate-800 bg-white px-4 py-3 shadow-sm"
+        class="sticky top-0 z-30 -mx-4 mt-3 border-y border-sky-100 bg-white/95 px-4 py-3 shadow-sm backdrop-blur"
       >
         <div class="flex items-center justify-between gap-3">
           <div>
@@ -402,19 +402,19 @@ watch([checkedIds, customItems, itemEdits, deletedItemIds], saveToStorage, {
           </div>
         </div>
 
-        <div class="mt-3 h-3 border-2 border-slate-800 bg-white">
+        <div class="mt-3 h-3 overflow-hidden rounded-full border border-slate-200 bg-slate-100">
           <div
-            class="h-full bg-sky-400"
+            class="h-full rounded-full bg-sky-400"
             :style="{ width: `${progressPercent}%` }"
           />
         </div>
 
         <div
-          class="mt-2 border-l-4 px-2 py-2"
+          class="mt-2 rounded-lg border px-2 py-2"
           :class="
             isAllChecked
-              ? 'border-emerald-500 bg-emerald-50 text-emerald-950'
-              : 'border-sky-500 bg-sky-50 text-sky-950'
+              ? 'border-emerald-200 bg-emerald-50/80 text-emerald-950'
+              : 'border-sky-200 bg-sky-50/80 text-sky-950'
           "
         >
           <p class="text-xs font-black">
@@ -424,7 +424,7 @@ watch([checkedIds, customItems, itemEdits, deletedItemIds], saveToStorage, {
 
         <div
           v-if="requiredRemainingItems.length > 0"
-          class="mt-2 border-l-4 border-orange-500 bg-orange-50 px-2 py-2"
+          class="mt-2 rounded-lg border border-orange-200 bg-orange-50/80 px-2 py-2"
         >
           <p class="text-xs font-black text-orange-950">
             重要そうな未チェック
@@ -443,11 +443,11 @@ watch([checkedIds, customItems, itemEdits, deletedItemIds], saveToStorage, {
               v-for="category in categories"
               :key="category.id"
               type="button"
-              class="border-2 px-3 py-2 text-left text-xs font-black active:translate-y-[1px]"
+              class="rounded-lg border px-3 py-2 text-left text-xs font-black shadow-sm active:translate-y-[1px]"
               :class="
                 currentCategoryId === category.id
-                  ? 'border-sky-600 bg-sky-100 text-sky-950'
-                  : 'border-slate-300 bg-white text-slate-700'
+                  ? 'border-sky-200 bg-sky-50 text-sky-950'
+                  : 'border-slate-200 bg-white text-slate-700'
               "
               @click="selectCategory(category.id)"
             >
@@ -464,7 +464,7 @@ watch([checkedIds, customItems, itemEdits, deletedItemIds], saveToStorage, {
       </section>
 
       <!-- 自分用追加 -->
-      <section class="mt-4 border-2 border-dashed border-slate-300 bg-white p-3">
+      <section class="mt-4 rounded-xl border border-dashed border-slate-200 bg-white p-3 shadow-sm">
         <div class="flex items-center justify-between gap-2">
           <div>
             <h2 class="text-sm font-black">
@@ -481,19 +481,19 @@ watch([checkedIds, customItems, itemEdits, deletedItemIds], saveToStorage, {
             v-model="newItemTitle"
             type="text"
             placeholder="例：替えのTシャツ"
-            class="w-full border-2 border-slate-300 bg-white px-3 py-2 text-base font-bold outline-none focus:border-sky-500"
+            class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-base font-bold outline-none transition focus:border-sky-300 focus:bg-sky-50/30"
           >
 
           <input
             v-model="newItemDescription"
             type="text"
             placeholder="メモ任意：ロッカーに入れる など"
-            class="w-full border-2 border-slate-300 bg-white px-3 py-2 text-sm font-medium outline-none focus:border-sky-500"
+            class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium outline-none transition focus:border-sky-300 focus:bg-sky-50/30"
           >
 
           <button
             type="button"
-            class="w-full border-2 border-slate-800 bg-slate-900 px-3 py-2 text-sm font-black text-white active:translate-y-[1px]"
+            class="w-full rounded-lg border border-sky-700 bg-sky-700 px-3 py-2 text-sm font-black text-white shadow-sm active:translate-y-[1px]"
             @click="addCustomItem"
           >
             このカテゴリに追加
@@ -521,15 +521,15 @@ watch([checkedIds, customItems, itemEdits, deletedItemIds], saveToStorage, {
           </p>
         </div>
 
-        <ul class="border-y-2 border-slate-800 bg-white">
+        <ul class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
           <li
             v-for="item in currentItems"
             :key="item.id"
-            class="border-b border-dashed border-slate-300 last:border-b-0"
+            class="border-b border-dashed border-slate-200 last:border-b-0"
           >
             <div
               v-if="editingItemId === item.id"
-              class="space-y-2 bg-sky-50 px-3 py-3"
+              class="space-y-2 bg-sky-50/70 px-3 py-3"
             >
               <p class="text-xs font-black text-sky-800">
                 この場で編集
@@ -538,19 +538,19 @@ watch([checkedIds, customItems, itemEdits, deletedItemIds], saveToStorage, {
               <input
                 v-model="editingTitle"
                 type="text"
-                class="w-full border-2 border-slate-300 bg-white px-3 py-2 text-base font-bold outline-none focus:border-sky-500"
+                class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-base font-bold outline-none transition focus:border-sky-300"
               >
 
               <input
                 v-model="editingDescription"
                 type="text"
-                class="w-full border-2 border-slate-300 bg-white px-3 py-2 text-sm font-medium outline-none focus:border-sky-500"
+                class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium outline-none transition focus:border-sky-300"
               >
 
               <div class="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  class="border-2 border-slate-800 bg-slate-900 px-3 py-2 text-sm font-black text-white"
+                  class="rounded-lg border border-sky-700 bg-sky-700 px-3 py-2 text-sm font-black text-white shadow-sm"
                   @click="saveEdit(item)"
                 >
                   保存
@@ -558,7 +558,7 @@ watch([checkedIds, customItems, itemEdits, deletedItemIds], saveToStorage, {
 
                 <button
                   type="button"
-                  class="border-2 border-slate-300 bg-white px-3 py-2 text-sm font-black"
+                  class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-black shadow-sm"
                   @click="cancelEdit"
                 >
                   やめる
@@ -569,11 +569,11 @@ watch([checkedIds, customItems, itemEdits, deletedItemIds], saveToStorage, {
             <div
               v-else
               class="flex items-start gap-3 px-3 py-3"
-              :class="isChecked(item.id) ? 'bg-slate-50 text-slate-500' : ''"
+              :class="isChecked(item.id) ? 'bg-slate-50/80 text-slate-500' : ''"
             >
               <button
                 type="button"
-                class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center border-2 border-slate-800 text-base font-black"
+                class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-[4px] border border-slate-300 text-base font-black shadow-sm"
                 :class="
                   isChecked(item.id)
                     ? 'bg-sky-400 text-slate-950'
@@ -600,14 +600,14 @@ watch([checkedIds, customItems, itemEdits, deletedItemIds], saveToStorage, {
 
                   <span
                     v-if="item.isRequired"
-                    class="border border-orange-500 bg-orange-50 px-1.5 py-0.5 text-[10px] font-black text-orange-700"
+                    class="rounded-md border border-orange-200 bg-orange-50 px-1.5 py-0.5 text-[10px] font-black text-orange-700"
                   >
                     重要
                   </span>
 
                   <span
                     v-if="item.isCustom"
-                    class="border border-slate-300 bg-white px-1.5 py-0.5 text-[10px] font-black text-slate-500"
+                    class="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-black text-slate-500"
                   >
                     追加
                   </span>
@@ -625,7 +625,7 @@ watch([checkedIds, customItems, itemEdits, deletedItemIds], saveToStorage, {
               <div class="flex shrink-0 flex-col gap-1">
                 <button
                   type="button"
-                  class="border border-slate-300 bg-white px-2 py-1 text-[11px] font-black text-slate-600"
+                  class="rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-black text-slate-600 shadow-sm"
                   @click="startEdit(item)"
                 >
                   編集
@@ -633,7 +633,7 @@ watch([checkedIds, customItems, itemEdits, deletedItemIds], saveToStorage, {
 
                 <button
                   type="button"
-                  class="border border-red-300 bg-white px-2 py-1 text-[11px] font-black text-red-600"
+                  class="rounded-md border border-red-200 bg-white px-2 py-1 text-[11px] font-black text-red-600 shadow-sm"
                   @click="deleteChecklistItem(item)"
                 >
                   削除
@@ -648,7 +648,7 @@ watch([checkedIds, customItems, itemEdits, deletedItemIds], saveToStorage, {
       <section class="mt-5 grid grid-cols-2 gap-2">
         <button
           type="button"
-          class="border-2 border-slate-300 bg-white px-3 py-2 text-sm font-black active:bg-slate-50"
+          class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-black shadow-sm active:bg-slate-50"
           @click="clearCheckedItems"
         >
           チェックを外す
@@ -656,7 +656,7 @@ watch([checkedIds, customItems, itemEdits, deletedItemIds], saveToStorage, {
 
         <button
           type="button"
-          class="border-2 border-slate-300 bg-white px-3 py-2 text-sm font-black text-red-700 active:bg-red-50"
+          class="rounded-lg border border-red-100 bg-white px-3 py-2 text-sm font-black text-red-700 shadow-sm active:bg-red-50"
           @click="resetCustomEdits"
         >
           追加・編集・削除を戻す
@@ -664,7 +664,7 @@ watch([checkedIds, customItems, itemEdits, deletedItemIds], saveToStorage, {
       </section>
 
       <!-- 現地メモ -->
-      <section class="mt-4 border-l-4 border-sky-500 bg-sky-50 px-3 py-3">
+      <section class="mt-4 rounded-lg border border-sky-100 bg-sky-50/80 px-3 py-3 shadow-sm">
         <h2 class="text-sm font-black text-sky-950">
           使い方メモ
         </h2>
@@ -679,8 +679,11 @@ watch([checkedIds, customItems, itemEdits, deletedItemIds], saveToStorage, {
 <style scoped>
 main {
   font-family:
-    'Noto Sans JP',
     'BIZ UDPGothic',
+    'Hiragino Maru Gothic ProN',
+    'Hiragino Sans',
+    'Noto Sans JP',
+    'Meiryo',
     system-ui,
     -apple-system,
     BlinkMacSystemFont,
@@ -690,6 +693,8 @@ main {
 h1,
 h2 {
   font-family:
+    'BIZ UDPGothic',
+    'Hiragino Maru Gothic ProN',
     'Zen Kaku Gothic New',
     'Noto Sans JP',
     system-ui,

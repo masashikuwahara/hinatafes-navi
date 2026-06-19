@@ -35,7 +35,7 @@ const currentPageName = computed(() => {
 </script>
 
 <template>
-  <header class="sticky top-0 z-40 border-b-2 border-slate-800 bg-white">
+  <header class="sticky top-0 z-40 border-b border-sky-100 bg-white/95 shadow-sm backdrop-blur">
     <div class="mx-auto max-w-md px-4 py-2">
       <div class="flex items-center justify-between gap-3">
         <NuxtLink
@@ -53,7 +53,7 @@ const currentPageName = computed(() => {
         </NuxtLink>
 
         <div class="shrink-0 text-right">
-          <p class="border-2 border-slate-800 bg-[#f7fbfc] px-2 py-1 text-[11px] font-black leading-none text-slate-900">
+          <p class="rounded-md border border-sky-100 bg-[#f7fbfc] px-2 py-1 text-[11px] font-black leading-none text-slate-900 shadow-sm">
             {{ currentLabel }}
           </p>
 
@@ -69,8 +69,11 @@ const currentPageName = computed(() => {
 <style scoped>
 header {
   font-family:
-    'Noto Sans JP',
     'BIZ UDPGothic',
+    'Hiragino Maru Gothic ProN',
+    'Hiragino Sans',
+    'Noto Sans JP',
+    'Meiryo',
     system-ui,
     -apple-system,
     BlinkMacSystemFont,
@@ -79,6 +82,8 @@ header {
 
 p {
   font-family:
+    'BIZ UDPGothic',
+    'Hiragino Maru Gothic ProN',
     'Zen Kaku Gothic New',
     'Noto Sans JP',
     system-ui,

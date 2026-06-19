@@ -30,7 +30,7 @@ const primaryActions: PrimaryAction[] = [
     title: '会場マップ',
     description: '現在地・スポット・エリアを確認',
     status: '迷ったらここ',
-    className: 'border-sky-500 bg-sky-50 text-sky-950',
+    className: 'border-sky-200 bg-sky-50/80 text-sky-950 shadow-sm',
   },
   {
     to: '/schedule',
@@ -38,7 +38,7 @@ const primaryActions: PrimaryAction[] = [
     title: 'スケジュール',
     description: '次の予定と時間を確認',
     status: '開演前に確認',
-    className: 'border-amber-500 bg-amber-50 text-amber-950',
+    className: 'border-amber-200 bg-amber-50/80 text-amber-950 shadow-sm',
   },
   {
     to: '/booths',
@@ -46,7 +46,7 @@ const primaryActions: PrimaryAction[] = [
     title: '出店・ブース',
     description: 'フード・物販・企画を探す',
     status: '近くを探す',
-    className: 'border-emerald-500 bg-emerald-50 text-emerald-950',
+    className: 'border-emerald-200 bg-emerald-50/80 text-emerald-950 shadow-sm',
   },
 ]
 
@@ -105,10 +105,10 @@ const {
 
 const getHeatRiskPanelClass = (level?: string) => {
   const classes: Record<string, string> = {
-    normal: 'border-sky-500 bg-sky-50 text-sky-950',
-    caution: 'border-yellow-500 bg-yellow-50 text-yellow-950',
-    warning: 'border-orange-500 bg-orange-50 text-orange-950',
-    danger: 'border-red-600 bg-red-50 text-red-950',
+    normal: 'border-sky-200 bg-sky-50/80 text-sky-950',
+    caution: 'border-yellow-200 bg-yellow-50/80 text-yellow-950',
+    warning: 'border-orange-200 bg-orange-50/80 text-orange-950',
+    danger: 'border-red-200 bg-red-50/80 text-red-950',
   }
 
   return classes[level ?? 'normal'] ?? classes.normal
@@ -123,7 +123,7 @@ onMounted(() => {
   <main class="min-h-screen bg-[#f7fbfc] pb-24 text-slate-900">
     <div class="mx-auto max-w-md px-4 py-4">
       <!-- 上部：案内板風ヘッダー -->
-      <section class="border-b-4 border-sky-400 pb-3">
+      <section class="rounded-xl border border-sky-100 bg-white px-3 py-3 shadow-sm">
         <p class="text-xs font-black tracking-[0.16em] text-sky-700">
           HINATA FES 2026 / FIELD GUIDE
         </p>
@@ -150,8 +150,8 @@ onMounted(() => {
       </section>
 
       <!-- 会場の天気・暑さ -->
-      <section class="mt-4 border-2 border-slate-800 bg-white">
-        <div class="flex items-center justify-between gap-3 border-b-2 border-slate-800 bg-sky-50 px-3 py-2">
+      <section class="mt-4 overflow-hidden rounded-xl border border-sky-100 bg-white shadow-sm">
+        <div class="flex items-center justify-between gap-3 border-b border-sky-100 bg-sky-50/80 px-3 py-2">
           <div>
             <p class="text-xs font-black tracking-[0.12em] text-sky-700">
               WEATHER
@@ -163,7 +163,7 @@ onMounted(() => {
 
           <button
             type="button"
-            class="shrink-0 border-2 border-slate-800 bg-white px-2 py-1 text-xs font-black active:translate-y-[1px] disabled:opacity-60"
+            class="shrink-0 rounded-md border border-sky-200 bg-white px-2 py-1 text-xs font-black shadow-sm active:translate-y-[1px] disabled:opacity-60"
             :disabled="isLoading"
             @click="fetchWeather"
           >
@@ -174,7 +174,7 @@ onMounted(() => {
         <div class="px-3 py-3">
           <p
             v-if="errorMessage"
-            class="border-l-4 border-orange-500 bg-orange-50 px-2 py-2 text-sm font-bold leading-relaxed text-orange-950"
+            class="rounded-md border border-orange-100 bg-orange-50 px-2 py-2 text-sm font-bold leading-relaxed text-orange-950"
           >
             {{ errorMessage }}
           </p>
@@ -206,8 +206,8 @@ onMounted(() => {
               </div>
             </div>
 
-            <div class="mt-3 grid grid-cols-3 border-y border-slate-300 py-2 text-center">
-              <div class="border-r border-slate-300 px-2">
+            <div class="mt-3 grid grid-cols-3 rounded-lg border border-slate-200 bg-slate-50/40 py-2 text-center">
+              <div class="border-r border-slate-200 px-2">
                 <p class="text-[10px] font-black text-slate-500">
                   体感
                 </p>
@@ -221,7 +221,7 @@ onMounted(() => {
                 </p>
               </div>
 
-              <div class="border-r border-slate-300 px-2">
+              <div class="border-r border-slate-200 px-2">
                 <p class="text-[10px] font-black text-slate-500">
                   湿度
                 </p>
@@ -252,7 +252,7 @@ onMounted(() => {
 
             <div
               v-if="heatRisk"
-              class="mt-3 border-l-4 px-2 py-2"
+              class="mt-3 rounded-lg border px-2 py-2"
               :class="getHeatRiskPanelClass(heatRisk.level)"
             >
               <div class="flex items-center justify-between gap-2">
@@ -293,14 +293,14 @@ onMounted(() => {
             :key="action.to"
             :to="action.to"
             :class="[
-              'block border-l-[6px] border-y-2 border-r-2 px-3 py-3 active:translate-y-[1px]',
+              'block rounded-lg border border-l-[5px] px-3 py-3 transition active:translate-y-[1px]',
               action.className,
             ]"
           >
             <div class="flex items-center justify-between gap-3">
               <div class="min-w-0">
                 <div class="flex items-center gap-2">
-                  <span class="border border-current bg-white px-1.5 py-0.5 text-[10px] font-black">
+                  <span class="rounded-md border border-current bg-white/80 px-1.5 py-0.5 text-[10px] font-black">
                     {{ action.label }}
                   </span>
                   <span class="text-xs font-bold">
@@ -335,7 +335,7 @@ onMounted(() => {
             v-for="action in subActions"
             :key="action.to"
             :to="action.to"
-            class="border-2 border-slate-300 bg-white px-3 py-3 active:bg-slate-50"
+            class="rounded-lg border border-slate-200 bg-white px-3 py-3 shadow-sm transition active:bg-slate-50"
           >
             <p class="text-[10px] font-black tracking-[0.12em] text-sky-700">
               {{ action.label }}
@@ -351,7 +351,7 @@ onMounted(() => {
       </section>
 
       <!-- しおり風チェック -->
-      <section class="mt-5 border-2 border-dashed border-slate-300 bg-white px-3 py-3">
+      <section class="mt-5 rounded-xl border border-dashed border-slate-200 bg-white px-3 py-3 shadow-sm">
         <div class="flex items-center justify-between gap-2">
           <h2 class="text-base font-black">
             出発前の確認
@@ -370,14 +370,14 @@ onMounted(() => {
             :key="item"
             class="flex items-center gap-2 text-sm font-bold"
           >
-            <span class="inline-block h-4 w-4 border-2 border-slate-500 bg-white" />
+            <span class="inline-block h-4 w-4 rounded-[3px] border border-slate-400 bg-white" />
             <span>{{ item }}</span>
           </li>
         </ul>
       </section>
 
       <!-- 注意メモ -->
-      <section class="mt-4 border-l-4 border-orange-500 bg-orange-50 px-3 py-3">
+      <section class="mt-4 rounded-lg border border-orange-100 bg-orange-50/80 px-3 py-3 shadow-sm">
         <h2 class="text-sm font-black text-orange-950">
           屋外利用メモ
         </h2>
@@ -392,8 +392,11 @@ onMounted(() => {
 <style scoped>
 main {
   font-family:
-    'Noto Sans JP',
     'BIZ UDPGothic',
+    'Hiragino Maru Gothic ProN',
+    'Hiragino Sans',
+    'Noto Sans JP',
+    'Meiryo',
     system-ui,
     -apple-system,
     BlinkMacSystemFont,
@@ -403,6 +406,8 @@ main {
 h1,
 h2 {
   font-family:
+    'BIZ UDPGothic',
+    'Hiragino Maru Gothic ProN',
     'Zen Kaku Gothic New',
     'Noto Sans JP',
     system-ui,

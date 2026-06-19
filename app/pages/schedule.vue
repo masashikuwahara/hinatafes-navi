@@ -135,15 +135,15 @@ const getCategoryLabel = (category: string) => {
 
 const getCategoryClass = (category: string) => {
   const classes: Record<string, string> = {
-    live: 'border-sky-600 bg-sky-50 text-sky-800',
-    stage: 'border-sky-600 bg-sky-50 text-sky-800',
-    booth: 'border-emerald-600 bg-emerald-50 text-emerald-800',
-    food: 'border-orange-600 bg-orange-50 text-orange-800',
-    goods: 'border-purple-600 bg-purple-50 text-purple-800',
-    transport: 'border-slate-600 bg-slate-50 text-slate-800',
-    rest: 'border-teal-600 bg-teal-50 text-teal-800',
-    heat: 'border-red-600 bg-red-50 text-red-800',
-    other: 'border-slate-500 bg-white text-slate-700',
+    live: 'border-sky-200 bg-sky-50/80 text-sky-800',
+    stage: 'border-sky-200 bg-sky-50/80 text-sky-800',
+    booth: 'border-emerald-200 bg-emerald-50/80 text-emerald-800',
+    food: 'border-orange-200 bg-orange-50/80 text-orange-800',
+    goods: 'border-purple-200 bg-purple-50/80 text-purple-800',
+    transport: 'border-slate-200 bg-slate-50/80 text-slate-800',
+    rest: 'border-teal-200 bg-teal-50/80 text-teal-800',
+    heat: 'border-red-200 bg-red-50/80 text-red-800',
+    other: 'border-slate-200 bg-white text-slate-700',
   }
 
   return classes[category] ?? classes.other
@@ -176,7 +176,7 @@ onMounted(() => {
   <main class="min-h-screen bg-[#f7fbfc] pb-24 text-slate-900">
     <div class="mx-auto max-w-md px-4 py-4">
       <!-- ヘッダー -->
-      <section class="border-b-4 border-sky-400 pb-3">
+      <section class="rounded-xl border border-sky-100 bg-white px-3 py-3 shadow-sm">
         <p class="text-xs font-black tracking-[0.16em] text-sky-700">
           TIME TABLE
         </p>
@@ -193,7 +193,7 @@ onMounted(() => {
 
           <NuxtLink
             to="/"
-            class="shrink-0 border-2 border-slate-800 bg-white px-2 py-1 text-xs font-black active:bg-slate-100"
+            class="shrink-0 rounded-md border border-sky-200 bg-white px-2 py-1 text-xs font-black shadow-sm active:bg-sky-50"
           >
             TOP
           </NuxtLink>
@@ -201,7 +201,7 @@ onMounted(() => {
       </section>
 
       <!-- 日付切り替え -->
-      <section class="sticky top-0 z-20 -mx-4 mt-3 border-y-2 border-slate-800 bg-white px-4 py-3">
+      <section class="sticky top-0 z-20 -mx-4 mt-3 border-y border-sky-100 bg-white/95 px-4 py-3 shadow-sm backdrop-blur">
         <div class="flex items-center justify-between gap-3">
           <div>
             <p class="text-xs font-black text-slate-500">
@@ -222,16 +222,19 @@ onMounted(() => {
           </div>
         </div>
 
-        <div class="mt-3 grid gap-2" :class="dates.length >= 2 ? 'grid-cols-2' : 'grid-cols-1'">
+        <div
+          class="mt-3 grid gap-2"
+          :class="dates.length >= 2 ? 'grid-cols-2' : 'grid-cols-1'"
+        >
           <button
             v-for="date in dates"
             :key="date"
             type="button"
-            class="border-2 px-3 py-2 text-sm font-black active:translate-y-[1px]"
+            class="rounded-lg border px-3 py-2 text-sm font-black shadow-sm active:translate-y-[1px]"
             :class="
               currentDate === date
-                ? 'border-sky-600 bg-sky-100 text-sky-950'
-                : 'border-slate-300 bg-white text-slate-700'
+                ? 'border-sky-200 bg-sky-50 text-sky-950'
+                : 'border-slate-200 bg-white text-slate-700'
             "
             @click="selectedDate = date"
           >
@@ -243,7 +246,7 @@ onMounted(() => {
       <!-- 次の予定 -->
       <section
         v-if="nextItem"
-        class="mt-4 border-l-4 border-orange-500 bg-orange-50 px-3 py-3"
+        class="mt-4 rounded-lg border border-orange-100 bg-orange-50/80 px-3 py-3 shadow-sm"
       >
         <p class="text-xs font-black text-orange-800">
           次に確認
@@ -276,11 +279,11 @@ onMounted(() => {
               v-for="option in categoryOptions"
               :key="option.id"
               type="button"
-              class="border-2 px-3 py-2 text-xs font-black active:translate-y-[1px]"
+              class="rounded-lg border px-3 py-2 text-xs font-black shadow-sm active:translate-y-[1px]"
               :class="
                 selectedCategory === option.id
-                  ? 'border-slate-900 bg-slate-900 text-white'
-                  : 'border-slate-300 bg-white text-slate-700'
+                  ? 'border-sky-200 bg-sky-700 text-white'
+                  : 'border-slate-200 bg-white text-slate-700'
               "
               @click="selectedCategory = option.id"
             >
@@ -304,7 +307,7 @@ onMounted(() => {
 
         <div
           v-if="filteredItems.length === 0"
-          class="border-2 border-dashed border-slate-300 bg-white px-3 py-5 text-center"
+          class="rounded-xl border border-dashed border-slate-200 bg-white px-3 py-5 text-center shadow-sm"
         >
           <p class="text-sm font-black">
             表示できる予定がありません
@@ -314,11 +317,11 @@ onMounted(() => {
           </p>
         </div>
 
-        <ol v-else class="border-y-2 border-slate-800 bg-white">
+        <ol v-else class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
           <li
             v-for="item in filteredItems"
             :key="item.id"
-            class="border-b border-dashed border-slate-300 last:border-b-0"
+            class="border-b border-dashed border-slate-200 last:border-b-0"
           >
             <div class="flex gap-3 px-3 py-3">
               <div class="w-[4.5rem] shrink-0">
@@ -337,7 +340,7 @@ onMounted(() => {
               <div class="min-w-0 flex-1">
                 <div class="flex flex-wrap items-center gap-2">
                   <span
-                    class="border px-1.5 py-0.5 text-[10px] font-black"
+                    class="rounded-md border px-1.5 py-0.5 text-[10px] font-black"
                     :class="getCategoryClass(item.category)"
                   >
                     {{ getCategoryLabel(item.category) }}
@@ -345,7 +348,7 @@ onMounted(() => {
 
                   <span
                     v-if="item.isImportant"
-                    class="border border-orange-500 bg-orange-50 px-1.5 py-0.5 text-[10px] font-black text-orange-700"
+                    class="rounded-md border border-orange-200 bg-orange-50 px-1.5 py-0.5 text-[10px] font-black text-orange-700"
                   >
                     重要
                   </span>
@@ -375,7 +378,7 @@ onMounted(() => {
       </section>
 
       <!-- 現地メモ -->
-      <section class="mt-4 border-l-4 border-sky-500 bg-sky-50 px-3 py-3">
+      <section class="mt-4 rounded-lg border border-sky-100 bg-sky-50/80 px-3 py-3 shadow-sm">
         <h2 class="text-sm font-black text-sky-950">
           移動前メモ
         </h2>
@@ -390,8 +393,11 @@ onMounted(() => {
 <style scoped>
 main {
   font-family:
-    'Noto Sans JP',
     'BIZ UDPGothic',
+    'Hiragino Maru Gothic ProN',
+    'Hiragino Sans',
+    'Noto Sans JP',
+    'Meiryo',
     system-ui,
     -apple-system,
     BlinkMacSystemFont,
@@ -401,6 +407,8 @@ main {
 h1,
 h2 {
   font-family:
+    'BIZ UDPGothic',
+    'Hiragino Maru Gothic ProN',
     'Zen Kaku Gothic New',
     'Noto Sans JP',
     system-ui,

@@ -269,18 +269,18 @@ const getCategoryPriority = (category: SpotCategory) => {
 
 const getCategoryClass = (category: string) => {
   const classes: Record<string, string> = {
-    entrance: 'border-slate-600 bg-slate-50 text-slate-800',
-    stage: 'border-sky-600 bg-sky-50 text-sky-800',
-    goods: 'border-purple-600 bg-purple-50 text-purple-800',
-    food: 'border-orange-600 bg-orange-50 text-orange-800',
-    booth: 'border-emerald-600 bg-emerald-50 text-emerald-800',
-    rest: 'border-teal-600 bg-teal-50 text-teal-800',
-    toilet: 'border-blue-600 bg-blue-50 text-blue-800',
-    water: 'border-cyan-600 bg-cyan-50 text-cyan-800',
-    medical: 'border-red-600 bg-red-50 text-red-800',
-    transport: 'border-slate-600 bg-slate-50 text-slate-800',
-    meeting: 'border-amber-600 bg-amber-50 text-amber-800',
-    other: 'border-slate-500 bg-white text-slate-700',
+    entrance: 'border-slate-200 bg-slate-50/80 text-slate-800',
+    stage: 'border-sky-200 bg-sky-50/80 text-sky-800',
+    goods: 'border-purple-200 bg-purple-50/80 text-purple-800',
+    food: 'border-orange-200 bg-orange-50/80 text-orange-800',
+    booth: 'border-emerald-200 bg-emerald-50/80 text-emerald-800',
+    rest: 'border-teal-200 bg-teal-50/80 text-teal-800',
+    toilet: 'border-blue-200 bg-blue-50/80 text-blue-800',
+    water: 'border-cyan-200 bg-cyan-50/80 text-cyan-800',
+    medical: 'border-red-200 bg-red-50/80 text-red-800',
+    transport: 'border-slate-200 bg-slate-50/80 text-slate-800',
+    meeting: 'border-amber-200 bg-amber-50/80 text-amber-800',
+    other: 'border-slate-200 bg-white text-slate-700',
   }
 
   return classes[category] ?? classes.other
@@ -443,7 +443,7 @@ onUnmounted(() => {
   <main class="min-h-screen bg-[#f7fbfc] pb-24 text-slate-900">
     <div class="mx-auto max-w-md px-4 py-4">
       <!-- ヘッダー -->
-      <section class="border-b-4 border-sky-400 pb-3">
+      <section class="rounded-xl border border-sky-100 bg-white px-3 py-3 shadow-sm">
         <p class="text-xs font-black tracking-[0.16em] text-sky-700">
           FIELD MAP
         </p>
@@ -460,7 +460,7 @@ onUnmounted(() => {
 
           <NuxtLink
             to="/"
-            class="shrink-0 border-2 border-slate-800 bg-white px-2 py-1 text-xs font-black active:bg-slate-100"
+            class="shrink-0 rounded-md border border-sky-200 bg-white px-2 py-1 text-xs font-black shadow-sm active:bg-sky-50"
           >
             TOP
           </NuxtLink>
@@ -469,10 +469,10 @@ onUnmounted(() => {
 
       <!-- 現在地ステータス -->
       <section
-        class="sticky top-0 z-30 -mx-4 mt-3 border-y-2 border-slate-800 bg-white px-4 py-3"
+        class="sticky top-0 z-30 -mx-4 mt-3 border-y border-sky-100 bg-white/95 px-4 py-3 shadow-sm backdrop-blur"
       >
         <div class="grid grid-cols-3 gap-2 text-center">
-          <div class="border-r border-slate-300 pr-2">
+          <div class="border-r border-slate-200 pr-2">
             <p class="text-xs font-black text-slate-500">
               現在地
             </p>
@@ -484,7 +484,7 @@ onUnmounted(() => {
             </p>
           </div>
 
-          <div class="border-r border-slate-300 px-2">
+          <div class="border-r border-slate-200 px-2">
             <p class="text-xs font-black text-slate-500">
               誤差
             </p>
@@ -510,7 +510,7 @@ onUnmounted(() => {
         <div class="mt-3 grid grid-cols-2 gap-2">
           <button
             type="button"
-            class="border-2 border-slate-800 bg-slate-900 px-3 py-2 text-sm font-black text-white active:translate-y-[1px] disabled:opacity-60"
+            class="rounded-lg border border-sky-700 bg-sky-700 px-3 py-2 text-sm font-black text-white shadow-sm active:translate-y-[1px] disabled:opacity-60"
             :disabled="isGettingLocation"
             @click="getCurrentLocation"
           >
@@ -519,11 +519,11 @@ onUnmounted(() => {
 
           <button
             type="button"
-            class="border-2 px-3 py-2 text-sm font-black active:translate-y-[1px]"
+            class="rounded-lg border px-3 py-2 text-sm font-black shadow-sm active:translate-y-[1px]"
             :class="
               isFollowingLocation
-                ? 'border-orange-600 bg-orange-100 text-orange-950'
-                : 'border-slate-300 bg-white text-slate-800'
+                ? 'border-orange-200 bg-orange-50 text-orange-950'
+                : 'border-slate-200 bg-white text-slate-800'
             "
             @click="
               isFollowingLocation
@@ -537,7 +537,7 @@ onUnmounted(() => {
 
         <p
           v-if="locationErrorMessage"
-          class="mt-2 border-l-4 border-orange-500 bg-orange-50 px-2 py-2 text-xs font-bold leading-relaxed text-orange-950"
+          class="mt-2 rounded-lg border border-orange-100 bg-orange-50/80 px-2 py-2 text-xs font-bold leading-relaxed text-orange-950"
         >
           {{ locationErrorMessage }}
         </p>
@@ -555,7 +555,7 @@ onUnmounted(() => {
           </p>
         </div>
 
-        <div class="overflow-hidden border-2 border-slate-800 bg-white">
+        <div class="map-shell relative z-0 isolate overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
           <ClientOnly>
             <SpotLeafletMap
               :spots="filteredSpots"
@@ -584,25 +584,25 @@ onUnmounted(() => {
       <!-- 選択中スポット -->
       <section
         v-if="selectedSpot"
-        class="mt-4 border-l-4 border-sky-500 bg-sky-50 px-3 py-3"
+        class="mt-4 rounded-lg border border-sky-100 bg-sky-50/80 px-3 py-3 shadow-sm"
       >
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0">
             <div class="flex flex-wrap items-center gap-2">
               <span
-                class="border px-1.5 py-0.5 text-[10px] font-black"
+                class="rounded-md border px-1.5 py-0.5 text-[10px] font-black"
                 :class="getCategoryClass(selectedSpot.category)"
               >
                 {{ getCategoryLabel(selectedSpot.category) }}
               </span>
 
-              <span class="border border-slate-300 bg-white px-1.5 py-0.5 text-[10px] font-black text-slate-600">
+              <span class="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-black text-slate-600">
                 {{ getAreaLabel(selectedSpot.area) }}
               </span>
 
               <span
                 v-if="selectedSpot.coordinateStatus === 'approximate'"
-                class="border border-orange-500 bg-orange-50 px-1.5 py-0.5 text-[10px] font-black text-orange-700"
+                class="rounded-md border border-orange-200 bg-orange-50 px-1.5 py-0.5 text-[10px] font-black text-orange-700"
               >
                 おおよそ
               </span>
@@ -634,11 +634,11 @@ onUnmounted(() => {
               v-for="category in categoryFilters"
               :key="category.id"
               type="button"
-              class="border-2 px-3 py-2 text-xs font-black active:translate-y-[1px]"
+              class="rounded-lg border px-3 py-2 text-xs font-black shadow-sm active:translate-y-[1px]"
               :class="
                 selectedCategory === category.id
-                  ? 'border-slate-900 bg-slate-900 text-white'
-                  : 'border-slate-300 bg-white text-slate-700'
+                  ? 'border-sky-200 bg-sky-700 text-white'
+                  : 'border-slate-200 bg-white text-slate-700'
               "
               @click="selectCategory(category.id)"
             >
@@ -660,16 +660,16 @@ onUnmounted(() => {
           </p>
         </div>
 
-        <ul class="border-y-2 border-slate-800 bg-white">
+        <ul class="border-y border-slate-200 bg-white">
           <li
             v-for="spot in nearestSpots"
             :key="spot.id"
-            class="border-b border-dashed border-slate-300 last:border-b-0"
+            class="border-b border-dashed border-slate-200 last:border-b-0"
           >
             <button
               type="button"
               class="block w-full px-3 py-3 text-left active:bg-slate-50"
-              :class="selectedSpotId === spot.id ? 'bg-sky-50' : ''"
+              :class="selectedSpotId === spot.id ? 'bg-sky-50/70' : ''"
               @click="focusSpot(spot)"
             >
               <div class="flex items-start gap-3">
@@ -685,7 +685,7 @@ onUnmounted(() => {
                 <div class="min-w-0 flex-1">
                   <div class="flex flex-wrap items-center gap-2">
                     <span
-                      class="border px-1.5 py-0.5 text-[10px] font-black"
+                      class="rounded-md border px-1.5 py-0.5 text-[10px] font-black"
                       :class="getCategoryClass(spot.category)"
                     >
                       {{ getCategoryLabel(spot.category) }}
@@ -693,7 +693,7 @@ onUnmounted(() => {
 
                     <span
                       v-if="spot.isImportant"
-                      class="border border-orange-500 bg-orange-50 px-1.5 py-0.5 text-[10px] font-black text-orange-700"
+                      class="rounded-md border border-orange-200 bg-orange-50 px-1.5 py-0.5 text-[10px] font-black text-orange-700"
                     >
                       重要
                     </span>
@@ -710,10 +710,6 @@ onUnmounted(() => {
                     {{ spot.description }}
                   </p>
                 </div>
-
-                <span class="shrink-0 text-lg font-black text-slate-400">
-                  →
-                </span>
               </div>
             </button>
           </li>
@@ -721,7 +717,7 @@ onUnmounted(() => {
       </section>
 
       <!-- 現地メモ -->
-      <section class="mt-4 border-l-4 border-orange-500 bg-orange-50 px-3 py-3">
+      <section class="mt-4 rounded-lg border border-orange-100 bg-orange-50/80 px-3 py-3 shadow-sm">
         <h2 class="text-sm font-black text-orange-950">
           マップ利用メモ
         </h2>
@@ -736,8 +732,11 @@ onUnmounted(() => {
 <style scoped>
 main {
   font-family:
-    'Noto Sans JP',
     'BIZ UDPGothic',
+    'Hiragino Maru Gothic ProN',
+    'Hiragino Sans',
+    'Noto Sans JP',
+    'Meiryo',
     system-ui,
     -apple-system,
     BlinkMacSystemFont,
@@ -747,9 +746,23 @@ main {
 h1,
 h2 {
   font-family:
+    'BIZ UDPGothic',
+    'Hiragino Maru Gothic ProN',
     'Zen Kaku Gothic New',
     'Noto Sans JP',
     system-ui,
     sans-serif;
+}
+
+/* Leaflet が sticky ヘッダーや下部ナビより前に出ないようにする */
+.map-shell :deep(.leaflet-container) {
+  z-index: 0;
+}
+
+.map-shell :deep(.leaflet-pane),
+.map-shell :deep(.leaflet-top),
+.map-shell :deep(.leaflet-bottom),
+.map-shell :deep(.leaflet-control-container) {
+  z-index: 1;
 }
 </style>

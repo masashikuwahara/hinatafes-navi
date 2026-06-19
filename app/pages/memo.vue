@@ -211,7 +211,7 @@ watch(memo, saveToStorage, {
   <main class="min-h-screen bg-[#f7fbfc] pb-24 text-slate-900">
     <div class="mx-auto max-w-md px-4 py-4">
       <!-- ヘッダー -->
-      <section class="border-b-4 border-sky-400 pb-3">
+      <section class="rounded-xl border border-sky-100 bg-white px-3 py-3 shadow-sm">
         <p class="text-xs font-black tracking-[0.16em] text-sky-700">
           FIELD MEMO
         </p>
@@ -228,7 +228,7 @@ watch(memo, saveToStorage, {
 
           <NuxtLink
             to="/"
-            class="shrink-0 border-2 border-slate-800 bg-white px-2 py-1 text-xs font-black active:bg-slate-100"
+            class="shrink-0 rounded-md border border-sky-200 bg-white px-2 py-1 text-xs font-black shadow-sm active:bg-sky-50"
           >
             TOP
           </NuxtLink>
@@ -237,7 +237,7 @@ watch(memo, saveToStorage, {
 
       <!-- 固定メモ要約 -->
       <section
-        class="sticky top-0 z-20 -mx-4 mt-3 border-y-2 border-slate-800 bg-white px-4 py-3"
+        class="sticky top-0 z-20 -mx-4 mt-3 border-y border-sky-100 bg-white/95 px-4 py-3 shadow-sm backdrop-blur"
       >
         <div class="flex items-center justify-between gap-3">
           <div>
@@ -264,7 +264,7 @@ watch(memo, saveToStorage, {
             v-for="item in summaryItems"
             :key="item.label"
             :href="item.href"
-            class="block border-l-4 border-sky-500 bg-sky-50 px-2 py-1.5 active:bg-sky-100"
+            class="block rounded-lg border border-sky-100 bg-sky-50/80 px-2 py-1.5 shadow-sm active:bg-sky-100"
           >
             <div class="flex gap-2">
               <p class="w-10 shrink-0 text-xs font-black text-sky-800">
@@ -293,11 +293,11 @@ watch(memo, saveToStorage, {
               v-for="link in quickLinks"
               :key="link.id"
               :href="link.href"
-              class="border-2 px-3 py-2 text-xs font-black active:translate-y-[1px]"
+              class="rounded-lg border px-3 py-2 text-xs font-black shadow-sm active:translate-y-[1px]"
               :class="
                 link.filled
-                  ? 'border-sky-600 bg-sky-100 text-sky-950'
-                  : 'border-slate-300 bg-white text-slate-700'
+                  ? 'border-sky-200 bg-sky-50 text-sky-950'
+                  : 'border-slate-200 bg-white text-slate-700'
               "
             >
               {{ link.label }}
@@ -310,7 +310,7 @@ watch(memo, saveToStorage, {
       <section class="mt-4 grid grid-cols-3 gap-2">
         <NuxtLink
           to="/map"
-          class="border-2 border-sky-600 bg-sky-50 px-2 py-2 text-center active:translate-y-[1px]"
+          class="rounded-lg border border-sky-200 bg-sky-50/80 px-2 py-2 text-center shadow-sm active:translate-y-[1px]"
         >
           <p class="text-[10px] font-black tracking-[0.12em] text-sky-700">
             MAP
@@ -322,7 +322,7 @@ watch(memo, saveToStorage, {
 
         <NuxtLink
           to="/schedule"
-          class="border-2 border-amber-600 bg-amber-50 px-2 py-2 text-center active:translate-y-[1px]"
+          class="rounded-lg border border-amber-200 bg-amber-50/80 px-2 py-2 text-center shadow-sm active:translate-y-[1px]"
         >
           <p class="text-[10px] font-black tracking-[0.12em] text-amber-700">
             TIME
@@ -334,7 +334,7 @@ watch(memo, saveToStorage, {
 
         <NuxtLink
           to="/booths"
-          class="border-2 border-emerald-600 bg-emerald-50 px-2 py-2 text-center active:translate-y-[1px]"
+          class="rounded-lg border border-emerald-200 bg-emerald-50/80 px-2 py-2 text-center shadow-sm active:translate-y-[1px]"
         >
           <p class="text-[10px] font-black tracking-[0.12em] text-emerald-700">
             BOOTH
@@ -356,12 +356,12 @@ watch(memo, saveToStorage, {
           </p>
         </div>
 
-        <div class="border-y-2 border-slate-800 bg-white">
+        <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
           <section
             v-for="field in memoFields"
             :id="`memo-${field.id}`"
             :key="field.id"
-            class="scroll-mt-36 border-b border-dashed border-slate-300 px-3 py-3 last:border-b-0"
+            class="scroll-mt-36 border-b border-dashed border-slate-200 px-3 py-3 last:border-b-0"
           >
             <div class="mb-2 flex items-start justify-between gap-3">
               <div>
@@ -372,14 +372,14 @@ watch(memo, saveToStorage, {
 
                   <span
                     v-if="field.important"
-                    class="border border-orange-500 bg-orange-50 px-1.5 py-0.5 text-[10px] font-black text-orange-700"
+                    class="rounded-md border border-orange-200 bg-orange-50 px-1.5 py-0.5 text-[10px] font-black text-orange-700"
                   >
                     重要
                   </span>
 
                   <span
                     v-if="memo[field.id].trim() !== ''"
-                    class="border border-sky-500 bg-sky-50 px-1.5 py-0.5 text-[10px] font-black text-sky-700"
+                    class="rounded-md border border-sky-200 bg-sky-50 px-1.5 py-0.5 text-[10px] font-black text-sky-700"
                   >
                     入力済み
                   </span>
@@ -395,7 +395,7 @@ watch(memo, saveToStorage, {
               v-model="memo[field.id]"
               :rows="field.rows"
               :placeholder="field.placeholder"
-              class="w-full resize-none border-2 border-slate-300 bg-[#fffdf7] px-3 py-2 text-base font-medium leading-relaxed outline-none focus:border-sky-500"
+              class="w-full resize-none rounded-lg border border-slate-200 bg-[#fffdf7] px-3 py-2 text-base font-medium leading-relaxed outline-none transition focus:border-sky-300 focus:bg-white"
             />
           </section>
         </div>
@@ -405,7 +405,7 @@ watch(memo, saveToStorage, {
       <section class="mt-5 grid grid-cols-2 gap-2">
         <button
           type="button"
-          class="border-2 border-slate-300 bg-white px-3 py-2 text-sm font-black active:bg-slate-50"
+          class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-black shadow-sm active:bg-slate-50"
           @click="saveToStorage"
         >
           今すぐ保存
@@ -413,7 +413,7 @@ watch(memo, saveToStorage, {
 
         <button
           type="button"
-          class="border-2 border-slate-300 bg-white px-3 py-2 text-sm font-black text-red-700 active:bg-red-50"
+          class="rounded-lg border border-red-100 bg-white px-3 py-2 text-sm font-black text-red-700 shadow-sm active:bg-red-50"
           @click="clearMemo"
         >
           メモを空にする
@@ -421,7 +421,7 @@ watch(memo, saveToStorage, {
       </section>
 
       <!-- 注意メモ -->
-      <section class="mt-4 border-l-4 border-orange-500 bg-orange-50 px-3 py-3">
+      <section class="mt-4 rounded-lg border border-orange-100 bg-orange-50/80 px-3 py-3 shadow-sm">
         <h2 class="text-sm font-black text-orange-950">
           メモの使い方
         </h2>
@@ -436,8 +436,11 @@ watch(memo, saveToStorage, {
 <style scoped>
 main {
   font-family:
-    'Noto Sans JP',
     'BIZ UDPGothic',
+    'Hiragino Maru Gothic ProN',
+    'Hiragino Sans',
+    'Noto Sans JP',
+    'Meiryo',
     system-ui,
     -apple-system,
     BlinkMacSystemFont,
@@ -448,6 +451,8 @@ h1,
 h2,
 h3 {
   font-family:
+    'BIZ UDPGothic',
+    'Hiragino Maru Gothic ProN',
     'Zen Kaku Gothic New',
     'Noto Sans JP',
     system-ui,
@@ -457,7 +462,10 @@ h3 {
 textarea {
   font-family:
     'BIZ UDPGothic',
+    'Hiragino Maru Gothic ProN',
+    'Hiragino Sans',
     'Noto Sans JP',
+    'Meiryo',
     system-ui,
     sans-serif;
 }

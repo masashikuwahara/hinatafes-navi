@@ -223,13 +223,13 @@ const getAreaLabel = (area: string) => {
 
 const getGenreClass = (genre: string) => {
   const classes: Record<string, string> = {
-    food: 'border-orange-600 bg-orange-50 text-orange-800',
-    goods: 'border-purple-600 bg-purple-50 text-purple-800',
-    booth: 'border-emerald-600 bg-emerald-50 text-emerald-800',
-    exhibit: 'border-sky-600 bg-sky-50 text-sky-800',
-    event: 'border-sky-600 bg-sky-50 text-sky-800',
-    rest: 'border-teal-600 bg-teal-50 text-teal-800',
-    other: 'border-slate-500 bg-white text-slate-700',
+    food: 'border-orange-200 bg-orange-50/80 text-orange-800',
+    goods: 'border-purple-200 bg-purple-50/80 text-purple-800',
+    booth: 'border-emerald-200 bg-emerald-50/80 text-emerald-800',
+    exhibit: 'border-sky-200 bg-sky-50/80 text-sky-800',
+    event: 'border-sky-200 bg-sky-50/80 text-sky-800',
+    rest: 'border-teal-200 bg-teal-50/80 text-teal-800',
+    other: 'border-slate-200 bg-white text-slate-700',
   }
 
   return classes[genre] ?? classes.other
@@ -269,7 +269,7 @@ watch(favoriteIds, saveFavorites, {
   <main class="min-h-screen bg-[#f7fbfc] pb-24 text-slate-900">
     <div class="mx-auto max-w-md px-4 py-4">
       <!-- ヘッダー -->
-      <section class="border-b-4 border-sky-400 pb-3">
+      <section class="rounded-xl border border-sky-100 bg-white px-3 py-3 shadow-sm">
         <p class="text-xs font-black tracking-[0.16em] text-sky-700">
           BOOTH GUIDE
         </p>
@@ -286,7 +286,7 @@ watch(favoriteIds, saveFavorites, {
 
           <NuxtLink
             to="/"
-            class="shrink-0 border-2 border-slate-800 bg-white px-2 py-1 text-xs font-black active:bg-slate-100"
+            class="shrink-0 rounded-md border border-sky-200 bg-white px-2 py-1 text-xs font-black shadow-sm active:bg-sky-50"
           >
             TOP
           </NuxtLink>
@@ -294,7 +294,7 @@ watch(favoriteIds, saveFavorites, {
       </section>
 
       <!-- 検索・絞り込み -->
-      <section class="sticky top-0 z-20 -mx-4 mt-3 border-y-2 border-slate-800 bg-white px-4 py-3">
+      <section class="sticky top-0 z-20 -mx-4 mt-3 border-y border-sky-100 bg-white/95 px-4 py-3 shadow-sm backdrop-blur">
         <div class="flex items-center justify-between gap-3">
           <div>
             <p class="text-xs font-black text-slate-500">
@@ -307,11 +307,11 @@ watch(favoriteIds, saveFavorites, {
 
           <button
             type="button"
-            class="border-2 px-3 py-2 text-xs font-black active:translate-y-[1px]"
+            class="rounded-lg border px-3 py-2 text-xs font-black shadow-sm active:translate-y-[1px]"
             :class="
               showFavoritesOnly
-                ? 'border-amber-600 bg-amber-100 text-amber-950'
-                : 'border-slate-300 bg-white text-slate-700'
+                ? 'border-amber-200 bg-amber-50 text-amber-950'
+                : 'border-slate-200 bg-white text-slate-700'
             "
             @click="showFavoritesOnly = !showFavoritesOnly"
           >
@@ -323,7 +323,7 @@ watch(favoriteIds, saveFavorites, {
           v-model="keyword"
           type="search"
           placeholder="店名・場所・ジャンルで検索"
-          class="mt-3 w-full border-2 border-slate-300 bg-white px-3 py-2 text-base font-bold outline-none focus:border-sky-500"
+          class="mt-3 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-base font-bold outline-none transition focus:border-sky-300 focus:bg-sky-50/30"
         >
 
         <div class="mt-3 -mx-4 overflow-x-auto px-4">
@@ -332,11 +332,11 @@ watch(favoriteIds, saveFavorites, {
               v-for="option in genreOptions"
               :key="option.id"
               type="button"
-              class="border-2 px-3 py-2 text-xs font-black active:translate-y-[1px]"
+              class="rounded-lg border px-3 py-2 text-xs font-black shadow-sm active:translate-y-[1px]"
               :class="
                 selectedGenre === option.id
-                  ? 'border-slate-900 bg-slate-900 text-white'
-                  : 'border-slate-300 bg-white text-slate-700'
+                  ? 'border-sky-200 bg-sky-700 text-white'
+                  : 'border-slate-200 bg-white text-slate-700'
               "
               @click="selectedGenre = option.id"
             >
@@ -351,11 +351,11 @@ watch(favoriteIds, saveFavorites, {
               v-for="option in areaOptions"
               :key="option.id"
               type="button"
-              class="border-2 px-3 py-2 text-xs font-black active:translate-y-[1px]"
+              class="rounded-lg border px-3 py-2 text-xs font-black shadow-sm active:translate-y-[1px]"
               :class="
                 selectedArea === option.id
-                  ? 'border-sky-600 bg-sky-100 text-sky-950'
-                  : 'border-slate-300 bg-white text-slate-700'
+                  ? 'border-sky-200 bg-sky-50 text-sky-950'
+                  : 'border-slate-200 bg-white text-slate-700'
               "
               @click="selectedArea = option.id"
             >
@@ -368,7 +368,7 @@ watch(favoriteIds, saveFavorites, {
       <!-- お気に入りメモ -->
       <section
         v-if="favoriteItems.length > 0 && !showFavoritesOnly"
-        class="mt-4 border-l-4 border-amber-500 bg-amber-50 px-3 py-3"
+        class="mt-4 rounded-lg border border-amber-100 bg-amber-50/80 px-3 py-3 shadow-sm"
       >
         <div class="flex items-center justify-between gap-3">
           <div>
@@ -382,7 +382,7 @@ watch(favoriteIds, saveFavorites, {
 
           <button
             type="button"
-            class="shrink-0 border-2 border-amber-700 bg-white px-2 py-1 text-xs font-black text-amber-900"
+            class="shrink-0 rounded-md border border-amber-200 bg-white px-2 py-1 text-xs font-black text-amber-900 shadow-sm"
             @click="showFavoritesOnly = true"
           >
             表示
@@ -409,7 +409,7 @@ watch(favoriteIds, saveFavorites, {
 
         <div
           v-if="filteredItems.length === 0"
-          class="border-2 border-dashed border-slate-300 bg-white px-3 py-5 text-center"
+          class="border-y border-dashed border-slate-200 bg-white px-3 py-5 text-center"
         >
           <p class="text-sm font-black">
             該当する出店・ブースがありません
@@ -419,37 +419,37 @@ watch(favoriteIds, saveFavorites, {
           </p>
         </div>
 
-        <ul v-else class="border-y-2 border-slate-800 bg-white">
+        <ul v-else class="border-y border-slate-200 bg-white">
           <li
             v-for="item in filteredItems"
             :key="item.id"
-            class="border-b border-dashed border-slate-300 last:border-b-0"
+            class="border-b border-dashed border-slate-200 last:border-b-0"
           >
             <div class="px-3 py-3">
               <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0 flex-1">
                   <div class="flex flex-wrap items-center gap-2">
                     <span
-                      class="border px-1.5 py-0.5 text-[10px] font-black"
+                      class="rounded-md border px-1.5 py-0.5 text-[10px] font-black"
                       :class="getGenreClass(item.genre)"
                     >
                       {{ getGenreLabel(item.genre) }}
                     </span>
 
-                    <span class="border border-slate-300 bg-white px-1.5 py-0.5 text-[10px] font-black text-slate-600">
+                    <span class="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-black text-slate-600">
                       {{ getAreaLabel(item.area) }}
                     </span>
 
                     <span
                       v-if="item.isRecommended"
-                      class="border border-orange-500 bg-orange-50 px-1.5 py-0.5 text-[10px] font-black text-orange-700"
+                      class="rounded-md border border-orange-200 bg-orange-50 px-1.5 py-0.5 text-[10px] font-black text-orange-700"
                     >
                       注目
                     </span>
 
                     <span
                       v-if="item.isOfficial"
-                      class="border border-sky-500 bg-sky-50 px-1.5 py-0.5 text-[10px] font-black text-sky-700"
+                      class="rounded-md border border-sky-200 bg-sky-50 px-1.5 py-0.5 text-[10px] font-black text-sky-700"
                     >
                       公式
                     </span>
@@ -487,7 +487,7 @@ watch(favoriteIds, saveFavorites, {
                     <span
                       v-for="tag in item.tags"
                       :key="tag"
-                      class="bg-slate-100 px-1.5 py-0.5 text-[11px] font-bold text-slate-600"
+                      class="rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] font-bold text-slate-600"
                     >
                       #{{ tag }}
                     </span>
@@ -496,11 +496,11 @@ watch(favoriteIds, saveFavorites, {
 
                 <button
                   type="button"
-                  class="shrink-0 border-2 px-2 py-1 text-sm font-black active:translate-y-[1px]"
+                  class="shrink-0 rounded-md border px-2 py-1 text-sm font-black shadow-sm active:translate-y-[1px]"
                   :class="
                     isFavorite(item.id)
-                      ? 'border-amber-600 bg-amber-100 text-amber-950'
-                      : 'border-slate-300 bg-white text-slate-500'
+                      ? 'border-amber-200 bg-amber-50 text-amber-950'
+                      : 'border-slate-200 bg-white text-slate-500'
                   "
                   :aria-pressed="isFavorite(item.id)"
                   @click="toggleFavorite(item.id)"
@@ -514,7 +514,7 @@ watch(favoriteIds, saveFavorites, {
       </section>
 
       <!-- 現地メモ -->
-      <section class="mt-4 border-l-4 border-sky-500 bg-sky-50 px-3 py-3">
+      <section class="mt-4 rounded-lg border border-sky-100 bg-sky-50/80 px-3 py-3 shadow-sm">
         <h2 class="text-sm font-black text-sky-950">
           探し方メモ
         </h2>
@@ -529,8 +529,11 @@ watch(favoriteIds, saveFavorites, {
 <style scoped>
 main {
   font-family:
-    'Noto Sans JP',
     'BIZ UDPGothic',
+    'Hiragino Maru Gothic ProN',
+    'Hiragino Sans',
+    'Noto Sans JP',
+    'Meiryo',
     system-ui,
     -apple-system,
     BlinkMacSystemFont,
@@ -540,6 +543,8 @@ main {
 h1,
 h2 {
   font-family:
+    'BIZ UDPGothic',
+    'Hiragino Maru Gothic ProN',
     'Zen Kaku Gothic New',
     'Noto Sans JP',
     system-ui,
