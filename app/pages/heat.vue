@@ -18,9 +18,10 @@ type HeatLog = {
 const STORAGE_KEY = 'hinatafes-heat-log-v2'
 
 useAppSeo({
-  title: '熱中症対策',
+  title: '暑さ対策・熱中症対策',
   description:
-    'ひなたフェス2026の現地で確認できる熱中症対策ページです。水分補給、休憩、危険サイン、救護・休憩場所の確認に使えます。',
+    'ひなたフェス2026の暑さ対策・熱中症対策を確認できるページです。宮崎での屋外イベント参加前に、水分補給、休憩、日差し対策、持ち物、体調不良時の注意点をスマホで確認できます。',
+  path: '/heat',
 })
 
 const currentTimeText = ref('')
@@ -214,11 +215,12 @@ watch([drinkCount, lastDrinkAt, checkedActionIds, restMemo], saveToStorage, {
 
         <div class="mt-1 flex items-end justify-between gap-3">
           <div>
-            <h1 class="text-[1.35rem] font-black leading-tight">
-              熱中症対策
+            <h1 class="text-2xl font-black leading-tight tracking-tight">
+              ひなたフェス2026の暑さ対策・熱中症対策
             </h1>
             <p class="mt-1 text-sm font-medium leading-snug text-slate-700">
-              暑さを感じる前に、水分・休憩を確認します。
+              ひなたフェス2026の宮崎遠征・屋外イベント参加前に、
+              暑さ対策、水分補給、休憩のタイミングを確認します。
             </p>
           </div>
 
@@ -288,7 +290,7 @@ watch([drinkCount, lastDrinkAt, checkedActionIds, restMemo], saveToStorage, {
       <section class="mt-4">
         <div class="mb-2 flex items-end justify-between gap-3">
           <h2 class="text-base font-black">
-            まずやること
+            暑さ対策でまずやること
           </h2>
           <p class="text-xs font-black text-slate-500">
             チェックして確認
@@ -360,7 +362,7 @@ watch([drinkCount, lastDrinkAt, checkedActionIds, restMemo], saveToStorage, {
               WARNING
             </p>
             <h2 class="mt-1 text-base font-black text-red-950">
-              危険サイン
+              熱中症の危険サイン
             </h2>
           </div>
 
@@ -387,7 +389,7 @@ watch([drinkCount, lastDrinkAt, checkedActionIds, restMemo], saveToStorage, {
       <!-- 会場内の確認導線 -->
       <section class="mt-5">
         <h2 class="mb-2 text-base font-black">
-          会場で確認する場所
+          ひなたフェス会場で確認する場所
         </h2>
 
         <div class="grid grid-cols-2 gap-2">
@@ -427,11 +429,13 @@ watch([drinkCount, lastDrinkAt, checkedActionIds, restMemo], saveToStorage, {
       <section class="mt-5 border-2 border-dashed border-slate-300 bg-white p-3">
         <div class="flex items-center justify-between gap-2">
           <div>
-            <h2 class="text-base font-black">
-              休憩メモ
+            <h2 class="text-sm font-black text-sky-950">
+              ひなたフェス2026の暑さ対策メモ
             </h2>
-            <p class="mt-0.5 text-xs font-medium text-slate-600">
-              どこで休むか、合流場所などを残せます。
+            <p class="mt-1 text-sm font-medium leading-relaxed text-sky-950">
+              ひなたフェス2026では、宮崎での移動や屋外での待機時間が長くなる可能性があります。
+              暑い日は「まだ大丈夫」と思う前に休憩し、移動・待機・開演前のタイミングで、
+              こまめに水分補給と暑さ対策グッズの確認をしてください。
             </p>
           </div>
         </div>
