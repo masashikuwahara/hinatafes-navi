@@ -123,6 +123,7 @@ const getCategoryLabel = (category: string) => {
     stage: 'ステージ',
     booth: 'ブース',
     food: 'フード',
+    ivent: 'イベント',
     goods: '物販',
     transport: '交通',
     rest: '休憩',
@@ -139,6 +140,7 @@ const getCategoryClass = (category: string) => {
     stage: 'border-sky-200 bg-sky-50/80 text-sky-800',
     booth: 'border-emerald-200 bg-emerald-50/80 text-emerald-800',
     food: 'border-orange-200 bg-orange-50/80 text-orange-800',
+    ivent: 'border-yellow-200 bg-yellow-50/80 text-yellow-800',
     goods: 'border-purple-200 bg-purple-50/80 text-purple-800',
     transport: 'border-slate-200 bg-slate-50/80 text-slate-800',
     rest: 'border-teal-200 bg-teal-50/80 text-teal-800',
@@ -151,8 +153,8 @@ const getCategoryClass = (category: string) => {
 
 const formatDateLabel = (date: string) => {
   const labels: Record<string, string> = {
-    '2026-09-12': '9/12 Sat',
-    '2026-09-13': '9/13 Sun',
+    '2026-09-05': '9/5 Sat',
+    '2026-09-06': '9/6 Sun',
   }
 
   return labels[date] ?? date

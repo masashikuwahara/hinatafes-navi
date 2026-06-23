@@ -4,6 +4,7 @@ export type ScheduleCategory =
   | 'food'
   | 'stage'
   | 'notice'
+  | 'ivent'
 
 export type ScheduleItem = {
   id: number
@@ -21,10 +22,10 @@ export type ScheduleItem = {
 export const scheduleItems: ScheduleItem[] = [
   {
     id: 1,
-    date: '2026-09-12',
+    date: '2026-09-05',
     dayLabel: 'DAY1',
-    startTime: '09:00',
-    endTime: '10:00',
+    startTime: '10:00',
+    endTime: '19:00',
     title: '会場エリア オープン',
     place: '会場周辺',
     category: 'notice',
@@ -33,7 +34,7 @@ export const scheduleItems: ScheduleItem[] = [
   },
   {
     id: 2,
-    date: '2026-09-12',
+    date: '2026-09-05',
     dayLabel: 'DAY1',
     startTime: '10:00',
     endTime: '17:00',
@@ -44,7 +45,7 @@ export const scheduleItems: ScheduleItem[] = [
   },
   {
     id: 3,
-    date: '2026-09-12',
+    date: '2026-09-05',
     dayLabel: 'DAY1',
     startTime: '10:30',
     endTime: '18:00',
@@ -55,20 +56,20 @@ export const scheduleItems: ScheduleItem[] = [
   },
   {
     id: 4,
-    date: '2026-09-12',
+    date: '2026-09-05',
     dayLabel: 'DAY1',
-    startTime: '12:00',
-    endTime: '13:00',
-    title: 'ステージイベント',
-    place: 'イベントステージ',
-    category: 'stage',
-    description: '詳細は公式発表後に更新予定です。',
+    startTime: '14:00',
+    // endTime: '15:00',
+    title: 'ひなたフェス スペシャル・パレード',
+    place: '公園内、ひなた陸上競技場',
+    category: 'ivent',
+    description: '公園内、陸上競技場をパレードします',
   },
   {
     id: 5,
-    date: '2026-09-12',
+    date: '2026-09-05',
     dayLabel: 'DAY1',
-    startTime: '17:00',
+    startTime: '14:30',
     title: 'ライブ開場',
     place: 'ライブ会場',
     category: 'live',
@@ -77,9 +78,9 @@ export const scheduleItems: ScheduleItem[] = [
   },
   {
     id: 6,
-    date: '2026-09-12',
+    date: '2026-09-05',
     dayLabel: 'DAY1',
-    startTime: '18:30',
+    startTime: '16:30',
     title: 'ライブ開演',
     place: 'ライブ会場',
     category: 'live',
@@ -88,10 +89,10 @@ export const scheduleItems: ScheduleItem[] = [
   },
   {
     id: 7,
-    date: '2026-09-13',
+    date: '2026-09-06',
     dayLabel: 'DAY2',
-    startTime: '09:00',
-    endTime: '10:00',
+    startTime: '10:00',
+    endTime: '19:30',
     title: '会場エリア オープン',
     place: '会場周辺',
     category: 'notice',
@@ -100,7 +101,7 @@ export const scheduleItems: ScheduleItem[] = [
   },
   {
     id: 8,
-    date: '2026-09-13',
+    date: '2026-09-06',
     dayLabel: 'DAY2',
     startTime: '10:00',
     endTime: '17:00',
@@ -111,7 +112,7 @@ export const scheduleItems: ScheduleItem[] = [
   },
   {
     id: 9,
-    date: '2026-09-13',
+    date: '2026-09-06',
     dayLabel: 'DAY2',
     startTime: '10:30',
     endTime: '18:00',
@@ -122,9 +123,20 @@ export const scheduleItems: ScheduleItem[] = [
   },
   {
     id: 10,
-    date: '2026-09-13',
+    date: '2026-09-06',
     dayLabel: 'DAY2',
-    startTime: '17:00',
+    startTime: '10:30',
+    endTime: '18:00',
+    title: 'ひなたフェス スペシャル・パレード',
+    place: '公園内、ひなた陸上競技場',
+    category: 'ivent',
+    description: '公園内、陸上競技場をパレードします',
+  },
+  {
+    id: 11,
+    date: '2026-09-06',
+    dayLabel: 'DAY2',
+    startTime: '14:30',
     title: 'ライブ開場',
     place: 'ライブ会場',
     category: 'live',
@@ -132,10 +144,10 @@ export const scheduleItems: ScheduleItem[] = [
     isImportant: true,
   },
   {
-    id: 11,
-    date: '2026-09-13',
+    id: 12,
+    date: '2026-09-06',
     dayLabel: 'DAY2',
-    startTime: '18:30',
+    startTime: '16:00',
     title: 'ライブ開演',
     place: 'ライブ会場',
     category: 'live',
