@@ -6,6 +6,7 @@ export type HomeFeatureId =
   | 'heat'
   | 'penlight'
   | 'memo'
+  | 'access'
 
 export type FeatureTheme =
   | 'sky'
@@ -74,6 +75,17 @@ export const homeFeatures: HomeFeature[] = [
     sortOrder: 4,
   },
   {
+    id: 'access',
+    title: '交通・アクセス',
+    shortTitle: 'アクセス',
+    description: '臨時バス、場外駐車場、運賃などの交通情報を確認します。',
+    to: '/access',
+    icon: '🚌',
+    theme: 'sky',
+    isTodayUse: true,
+    sortOrder: 5,
+  },
+  {
     id: 'heat',
     title: '熱中症対策',
     shortTitle: '暑さ対策',
@@ -82,7 +94,7 @@ export const homeFeatures: HomeFeature[] = [
     icon: '🥤',
     theme: 'pink',
     isTodayUse: true,
-    sortOrder: 5,
+    sortOrder: 6,
   },
   {
     id: 'penlight',
@@ -93,7 +105,7 @@ export const homeFeatures: HomeFeature[] = [
     icon: '🔦',
     theme: 'purple',
     isTodayUse: false,
-    sortOrder: 6,
+    sortOrder: 7,
   },
   {
     id: 'memo',
@@ -104,7 +116,7 @@ export const homeFeatures: HomeFeature[] = [
     icon: '📝',
     theme: 'slate',
     isTodayUse: false,
-    sortOrder: 7,
+    sortOrder: 8,
   },
 ]
 

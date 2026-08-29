@@ -182,3 +182,106 @@ export const officialHeatLinks: HeatOfficialLink[] = [
     url: 'https://www.mhlw.go.jp/seisakunitsuite/bunya/kenkou_iryou/kenkou/nettyuu/nettyuu_taisaku/',
   },
 ]
+
+export type CoolingSpot = {
+  id: string
+  name: string
+  type: 'air-conditioned' | 'shade'
+  label: string
+  description: string
+}
+
+export type HeatRule = {
+  id: string
+  title: string
+  description: string
+  level: 'info' | 'important' | 'warning'
+}
+
+export const heatMeta = {
+  sourceUrl: 'https://www.hinata-fes2026.com/diary/5kbgi5pqq/',
+  sourceLabel: 'ひなたフェス2026 対策本部',
+  publishedAt: '2026-08-27',
+  lastVerifiedAt: '2026-08-29',
+}
+
+export const parasolRules: HeatRule[] = [
+  {
+    id: 'parasol-park',
+    title: '園内で日傘を使用できます',
+    description:
+      '園内の移動中、飲食店の列、休憩中などでも日傘を利用できます。',
+    level: 'info',
+  },
+  {
+    id: 'parasol-stadium',
+    title: 'スタジアム内は14:30〜16:20まで',
+    description:
+      'ひなたサンマリンスタジアム宮崎では、開場14:30からライブ開演10分前の16:20まで日傘を使用できます。',
+    level: 'important',
+  },
+  {
+    id: 'parasol-gate',
+    title: '入場ゲート前後では日傘を控える',
+    description:
+      '混雑緩和とスムーズな入場のため、入場ゲートを通過する前後は日傘の使用を控えるよう公式から案内されています。',
+    level: 'warning',
+  },
+  {
+    id: 'parasol-seat',
+    title: '周囲に配慮して使用',
+    description:
+      'スタジアムの座席では周囲との距離が近いため、周りの方に配慮して使用してください。',
+    level: 'info',
+  },
+]
+
+export const coolingSpots: CoolingSpot[] = [
+  {
+    id: 'hinata-budokan',
+    name: 'ひなた武道館',
+    type: 'air-conditioned',
+    label: '空調あり',
+    description:
+      '前回も「おひさま休憩所」として使用された、空調の効いた休憩スペースです。',
+  },
+  {
+    id: 'hinata-kibana-dome',
+    name: 'ひなた木の花ドーム',
+    type: 'air-conditioned',
+    label: '空調あり',
+    description:
+      '「ひなたモール」として使用されます。グッズ売り場やFCブースなども設置される空調の効いた屋内エリアです。',
+  },
+  {
+    id: 'hinata-expo-shade',
+    name: 'ひなたエキスポ',
+    type: 'shade',
+    label: '日陰エリア',
+    description:
+      '第2陸上競技場。前回以上に日陰エリアを拡張する予定と公式から案内されています。',
+  },
+  {
+    id: 'cloak-course',
+    name: 'クローク周辺・園内走路',
+    type: 'shade',
+    label: '大型日除け',
+    description:
+      '空調はありませんが、大きな日除けになっており、風が抜けるエリアとして案内されています。',
+  },
+]
+
+export const weatherRules: HeatRule[] = [
+  {
+    id: 'parade-rain-cancel',
+    title: '雨天時はスペシャルパレード中止',
+    description:
+      '当日に雨が降った場合、スペシャルパレードは中止となります。小雨の場合も含む方針です。',
+    level: 'warning',
+  },
+]
+
+export const heatOfficialNotes = [
+  '9月上旬でも強い日差しや厳しい暑さとなる可能性があります。',
+  '無理をせず、自分の体調を優先してフェスを楽しんでください。',
+]
