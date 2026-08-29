@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { boothItems } from '~/data/booths'
+import { hinaaiBooths } from '~/data/hinaaiBooths'
 
 type DisplayBoothItem = {
   id: string
@@ -27,6 +28,14 @@ useAppSeo({
   description:
     'ひなたフェス2026の出店・ブース一覧です。フード、物販、企画ブースなどをジャンルやエリアで絞り込み、気になるブースをお気に入り保存できます。',
 })
+
+const hinataExpoBooths = hinaaiBooths.filter(
+  (booth) => booth.area === 'hinata-expo',
+)
+
+const hinataBudokanBooths = hinaaiBooths.filter(
+  (booth) => booth.area === 'hinata-budokan',
+)
 
 const keyword = ref('')
 const selectedGenre = ref('all')
@@ -511,6 +520,191 @@ watch(favoriteIds, saveFavorites, {
             </div>
           </li>
         </ul>
+      </section>
+
+      <section class="mt-8">
+        <div class="mb-4">
+          <p class="text-xs font-black tracking-[0.12em] text-sky-600">
+            HINA-AI AREA
+          </p>
+
+          <h2 class="mt-1 text-xl font-black text-slate-900">
+            「日向坂で会いましょう」エリア
+          </h2>
+
+          <p class="mt-2 text-sm leading-6 text-slate-600">
+            番組から生まれた体験コンテンツや展示を楽しめます。
+          </p>
+        </div>
+
+        <div
+          class="mb-5 rounded-2xl border border-slate-200 bg-white p-4"
+        >
+          <p class="text-sm font-black text-slate-900">
+            🎫 整理券について
+          </p>
+
+          <div class="mt-3 space-y-3">
+            <div class="flex items-start gap-3">
+              <TicketBadge type="required" />
+
+              <p class="flex-1 text-xs leading-5 text-slate-600">
+                そのコンテンツ自体への参加に整理券が必要です。
+              </p>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <TicketBadge type="venue-timed" />
+
+              <p class="flex-1 text-xs leading-5 text-slate-600">
+                コンテンツ個別ではなく、施設への入場に時間別整理券が必要です。
+              </p>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <TicketBadge type="none" />
+
+              <p class="flex-1 text-xs leading-5 text-slate-600">
+                現時点で整理券が必要との案内はありません。
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ひなたエキスポ -->
+        <div>
+          <div class="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <p class="text-xs font-bold text-emerald-600">
+                ひなたエキスポ
+              </p>
+
+              <h3 class="font-black text-slate-900">
+                第2陸上競技場
+              </h3>
+            </div>
+
+            <span
+              class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700"
+            >
+              3コンテンツ
+            </span>
+          </div>
+
+          <div class="space-y-3">
+            <article
+              v-for="booth in hinataExpoBooths"
+              :key="booth.id"
+              class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+            >
+              <div class="flex flex-wrap gap-2">
+                <TicketBadge :type="booth.ticketType" />
+
+                <span
+                  v-if="booth.prizeAvailable"
+                  class="rounded-full bg-pink-100 px-2.5 py-1 text-[11px] font-black text-pink-700"
+                >
+                  賞品あり
+                </span>
+              </div>
+
+              <h4 class="mt-3 font-black leading-6 text-slate-900">
+                {{ booth.name }}
+              </h4>
+
+              <p class="mt-1 text-xs font-bold text-sky-700">
+                {{ booth.presenters.join('・') }} presents
+              </p>
+
+              <p class="mt-3 text-sm leading-6 text-slate-600">
+                {{ booth.description }}
+              </p>
+
+              <div
+                v-if="booth.ticketNote"
+                class="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3"
+              >
+                <p class="text-xs font-bold leading-5 text-amber-800">
+                  🎫 {{ booth.ticketNote }}
+                </p>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <!-- ひなた武道館 -->
+        <div class="mt-8">
+          <div class="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <p class="text-xs font-bold text-sky-600">
+                ひなた武道館
+              </p>
+
+              <h3 class="font-black text-slate-900">
+                冷房完備エリア
+              </h3>
+            </div>
+
+            <span
+              class="rounded-full bg-sky-50 px-3 py-1 text-xs font-bold text-sky-700"
+            >
+              2コンテンツ
+            </span>
+          </div>
+
+          <div
+            class="mb-3 rounded-xl border border-amber-200 bg-amber-50 p-3"
+          >
+            <p class="text-sm font-black text-amber-900">
+              🎫 武道館は時間別整理券制
+            </p>
+
+            <p class="mt-1 text-xs leading-5 text-amber-800">
+              整理券を持っていない場合、入場できない場合があります。
+            </p>
+          </div>
+
+          <div class="space-y-3">
+            <article
+              v-for="booth in hinataBudokanBooths"
+              :key="booth.id"
+              class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+            >
+              <TicketBadge :type="booth.ticketType" />
+
+              <h4 class="mt-3 font-black leading-6 text-slate-900">
+                {{ booth.name }}
+              </h4>
+
+              <p class="mt-1 text-xs font-bold text-sky-700">
+                {{ booth.presenters.join('・') }} presents
+              </p>
+
+              <p class="mt-3 text-sm leading-6 text-slate-600">
+                {{ booth.description }}
+              </p>
+
+              <div
+                v-if="booth.ticketNote"
+                class="mt-3 rounded-xl border border-purple-200 bg-purple-50 p-3"
+              >
+                <p class="text-xs font-bold leading-5 text-purple-800">
+                  🎫 {{ booth.ticketNote }}
+                </p>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <a
+          href="https://www.hinata-fes2026.com/lp/hinaai/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="mt-5 inline-flex min-h-11 items-center justify-center rounded-xl border border-sky-200 bg-white px-4 text-sm font-black text-sky-700"
+        >
+          公式「日向坂で会いましょう」エリアを見る
+          <span class="ml-2">↗</span>
+        </a>
       </section>
 
       <!-- 現地メモ -->

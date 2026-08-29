@@ -276,6 +276,8 @@ onMounted(() => {
         </div>
       </section>
 
+      <ImportantNotices />
+
       <!-- 今日使う -->
       <section class="mt-4">
         <div class="mb-2 flex items-center justify-between">

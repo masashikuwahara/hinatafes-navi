@@ -1,29 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { spots } from '~/data/spots'
-
-type SpotCategory =
-  | 'entrance'
-  | 'stage'
-  | 'goods'
-  | 'food'
-  | 'booth'
-  | 'rest'
-  | 'toilet'
-  | 'water'
-  | 'medical'
-  | 'transport'
-  | 'meeting'
-  | 'other'
-
-type SpotArea =
-  | 'center'
-  | 'north'
-  | 'south'
-  | 'east'
-  | 'west'
-  | 'outside'
-  | 'unknown'
+import {
+  spots,
+  spotCategories,
+  type SpotCategory,
+  type SpotArea,
+} from '~/data/spots'
 
 type CoordinateStatus = 'confirmed' | 'approximate'
 
@@ -115,18 +97,14 @@ const spotItems = computed<DisplaySpot[]>(() => {
 })
 
 const categoryFilters = computed<CategoryFilter[]>(() => {
-  const categories = Array.from(
-    new Set(spotItems.value.map((spot) => spot.category)),
-  )
-
   return [
     {
       id: 'all',
       label: 'すべて',
     },
-    ...categories.map((category) => ({
-      id: category,
-      label: getCategoryLabel(category),
+    ...spotCategories.map((category) => ({
+      id: category.value,
+      label: `${category.icon} ${category.label}`,
     })),
   ]
 })
@@ -430,6 +408,10 @@ const focusSpot = (spot: DisplaySpot) => {
   selectedSpotId.value = spot.id
 }
 
+const toiletSpots = computed(() =>
+  spotItems.value.filter((spot) => spot.category === 'toilet'),
+)
+
 onMounted(() => {
   getCurrentLocation()
 })
@@ -644,6 +626,33 @@ onUnmounted(() => {
             >
               {{ category.label }}
             </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- トイレ案内 -->
+      <section
+        v-if="selectedCategory === 'toilet' && toiletSpots.length === 0"
+        class="mt-3 rounded-xl border border-sky-200 bg-sky-50 p-4"
+      >
+        <div class="flex items-start gap-3">
+          <span
+            class="text-xl"
+            aria-hidden="true"
+          >
+            🚻
+          </span>
+
+          <div>
+            <p class="text-sm font-black text-sky-950">
+              トイレ位置は公式発表待ちです
+            </p>
+
+            <p class="mt-1 text-xs font-medium leading-5 text-sky-800">
+              ひなたフェス2026では前回よりトイレが増設され、
+              各コンテンツの配置に合わせて設置場所と数が調整されています。
+              詳細な位置が確認でき次第、このマップに追加します。
+            </p>
           </div>
         </div>
       </section>
