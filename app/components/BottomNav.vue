@@ -33,6 +33,11 @@ const navItems: NavItem[] = [
     shortLabel: 'MEMO',
     to: '/memo',
   },
+  {
+    label: 'アクセス',
+    shortLabel: 'ACCESS',
+    to: '/access',
+  },
 ]
 
 const isActive = (to: string) => {
@@ -60,7 +65,7 @@ const isActive = (to: string) => {
           :aria-current="isActive(item.to) ? 'page' : undefined"
         >
           <span
-            class="mx-auto block w-fit rounded-md border px-1.5 py-0.5 text-[9px] font-black leading-none tracking-[0.08em]"
+            class="mx-auto block w-fit rounded-md border px-1 py-0.5 text-[8px] font-black leading-none tracking-[0.04em]"
             :class="
               isActive(item.to)
                 ? 'border-sky-200 bg-white text-sky-700'
@@ -70,7 +75,7 @@ const isActive = (to: string) => {
             {{ item.shortLabel }}
           </span>
 
-          <span class="mt-1.5 block text-xs font-black leading-none">
+          <span class="mt-1.5 block text-[11px] font-black leading-none">
             {{ item.label }}
           </span>
         </NuxtLink>
