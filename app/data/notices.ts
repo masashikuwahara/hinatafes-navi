@@ -15,6 +15,19 @@ export type Notice = {
 
 export const notices: Notice[] = [
   {
+    id: 'event-cancelled-20260902',
+    level: 'warning',
+    title: 'ひなたフェス2026 開催中止',
+    description:
+      '9月5日・6日に開催予定だった「ひなたフェス2026」は開催中止となりました。払い戻し等については9月3日昼以降、公式から順次案内される予定です。',
+    publishedAt: '2026-09-02',
+    sourceUrl:
+      'https://www.hinatazaka46.com/s/official/news/detail/E00906',
+    sourceLabel: '日向坂46公式',
+    showOnHome: false,
+    isActive: true,
+  },
+  {
     id: 'parade-rain-cancel-20260827',
     level: 'warning',
     title: '雨天時はスペシャルパレード中止',

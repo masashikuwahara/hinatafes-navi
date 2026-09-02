@@ -1,5 +1,14 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
+import { eventStatus } from '~/data/eventStatus'
+import {
+  todayFeatures,
+  afterCancellationFeatures,
+} from '~/data/homeFeatures'
+
+const isEventCancelled = computed(
+  () => eventStatus.status === 'cancelled',
+)
 
 type PrimaryAction = {
   to: string
@@ -122,6 +131,7 @@ onMounted(() => {
 <template>
   <main class="min-h-screen bg-[#f7fbfc] pb-24 text-slate-900">
     <div class="mx-auto max-w-md px-4 py-4">
+      <EventCancellationBanner />
       <!-- 上部：案内板風ヘッダー -->
       <section class="rounded-xl border border-sky-100 bg-white px-3 py-3 shadow-sm">
         <p class="text-xs font-black tracking-[0.16em] text-sky-700">
@@ -276,10 +286,10 @@ onMounted(() => {
         </div>
       </section>
 
-      <ImportantNotices />
+      <!-- <ImportantNotices /> -->
 
       <!-- 今日使う -->
-      <section class="mt-4">
+      <section v-if="!isEventCancelled" class="mt-4">
         <div class="mb-2 flex items-center justify-between">
           <h2 class="text-base font-black">
             今日すぐ使う
@@ -320,6 +330,113 @@ onMounted(() => {
 
               <span class="shrink-0 text-xl font-black">
                 →
+              </span>
+            </div>
+          </NuxtLink>
+        </div>
+      </section>
+
+      <section
+        v-if="isEventCancelled"
+        class="mt-5"
+      >
+        <div class="mb-3">
+          <p class="text-xs font-black tracking-[0.12em] text-red-600">
+            AFTER CANCELLATION
+          </p>
+
+          <h2 class="mt-1 text-lg font-black text-slate-900">
+            中止後に確認する
+          </h2>
+
+          <p class="mt-1 text-sm font-medium leading-6 text-slate-600">
+            払い戻しや交通など、今後確認が必要な情報をまとめています。
+          </p>
+        </div>
+
+        <div class="space-y-3">
+          <!-- 公式 -->
+          <a
+            :href="eventStatus.sourceUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="block rounded-xl border border-red-200 bg-white px-4 py-4 shadow-sm active:bg-red-50"
+          >
+            <div class="flex items-center gap-3">
+              <div
+                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-red-50 text-xl"
+              >
+                📢
+              </div>
+
+              <div class="min-w-0 flex-1">
+                <p class="font-black text-slate-900">
+                  公式のお知らせ
+                </p>
+
+                <p class="mt-1 text-xs font-medium leading-5 text-slate-600">
+                  開催中止と今後の対応を確認します。
+                </p>
+              </div>
+
+              <span class="shrink-0 text-slate-400">
+                ↗
+              </span>
+            </div>
+          </a>
+
+          <!-- アクセス -->
+          <NuxtLink
+            to="/access"
+            class="block rounded-xl border border-sky-200 bg-white px-4 py-4 shadow-sm active:bg-sky-50"
+          >
+            <div class="flex items-center gap-3">
+              <div
+                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-xl"
+              >
+                🚌
+              </div>
+
+              <div class="min-w-0 flex-1">
+                <p class="font-black text-slate-900">
+                  交通・アクセス
+                </p>
+
+                <p class="mt-1 text-xs font-medium leading-5 text-slate-600">
+                  臨時バスなどの中止後の交通情報を確認します。
+                </p>
+              </div>
+
+              <span class="shrink-0 text-slate-400">
+                ›
+              </span>
+            </div>
+          </NuxtLink>
+
+          <!-- スケジュール -->
+          <NuxtLink
+            to="/schedule"
+            class="block rounded-xl border border-amber-200 bg-white px-4 py-4 shadow-sm active:bg-amber-50"
+          >
+            <div class="flex items-center gap-3">
+              <div
+                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-xl"
+              >
+                🗓️
+              </div>
+
+              <div class="min-w-0 flex-1">
+                <p class="font-black text-slate-900">
+                  予定されていた日程
+                </p>
+
+                <p class="mt-1 text-xs font-medium leading-5 text-slate-600">
+                  開催予定だったスケジュールを記録として確認します。
+                </p>
+              </div>
+
+              <span class="shrink-0 text-slate-400">
+                ›
               </span>
             </div>
           </NuxtLink>

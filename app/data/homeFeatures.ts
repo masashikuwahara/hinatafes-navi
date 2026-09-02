@@ -127,3 +127,43 @@ export const todayFeatures = homeFeatures
 export const sortedHomeFeatures = [...homeFeatures].sort(
   (a, b) => a.sortOrder - b.sortOrder,
 )
+
+export type AfterCancellationFeature = {
+  id: string
+  title: string
+  description: string
+  to: string
+  icon: string
+  theme: FeatureTheme
+  sortOrder: number
+}
+
+export const afterCancellationFeatures: AfterCancellationFeature[] = [
+  {
+    id: 'official-info',
+    title: '公式のお知らせ',
+    description: '開催中止と今後の案内を確認します。',
+    to: 'https://www.hinatazaka46.com/s/official/news/detail/E00906',
+    icon: '📢',
+    theme: 'pink',
+    sortOrder: 1,
+  },
+  {
+    id: 'access',
+    title: '交通・アクセス',
+    description: '臨時バスや交通情報の中止後対応を確認します。',
+    to: '/access',
+    icon: '🚌',
+    theme: 'sky',
+    sortOrder: 2,
+  },
+  {
+    id: 'schedule',
+    title: '予定されていた日程',
+    description: '開催予定だったスケジュールを記録として確認します。',
+    to: '/schedule',
+    icon: '🗓️',
+    theme: 'yellow',
+    sortOrder: 3,
+  },
+]

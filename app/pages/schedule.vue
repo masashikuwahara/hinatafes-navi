@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { scheduleItems } from '~/data/schedule'
+import { eventStatus } from '~/data/eventStatus'
 
 type DisplayScheduleItem = {
   id: string
@@ -21,14 +22,18 @@ type FilterOption = {
 }
 
 useAppSeo({
-  title: 'スケジュール',
+  title: 'スケジュール｜ひなたフェス2026 開催中止',
   description:
-    'ひなたフェス2026のスケジュール確認ページです。ライブ、出店、ブース、移動、休憩の予定を現地で素早く確認できます。',
+    'ひなたフェス2026は開催中止となりました。9月5日・6日に予定されていたイベントスケジュールを記録として掲載しています。',
 })
 
 const selectedDate = ref('')
 const selectedCategory = ref('all')
 const currentTimeText = ref('')
+
+const isEventCancelled = computed(
+  () => eventStatus.status === 'cancelled',
+)
 
 const normalizeScheduleItem = (
   item: unknown,
@@ -202,6 +207,43 @@ onMounted(() => {
         </div>
       </section>
 
+      <section
+        v-if="isEventCancelled"
+        class="mt-3 rounded-xl border-2 border-red-200 bg-red-50 px-4 py-4 shadow-sm"
+      >
+        <div class="flex items-start gap-3">
+          <div
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-700"
+          >
+            !
+          </div>
+
+          <div>
+            <p class="text-xs font-black tracking-[0.08em] text-red-700">
+              EVENT CANCELLED
+            </p>
+
+            <h2 class="mt-1 text-base font-black text-red-950">
+              9月5日・6日の開催は中止となりました
+            </h2>
+
+            <p class="mt-2 text-sm font-medium leading-6 text-red-900">
+              以下のスケジュールは開催予定だった内容の記録です。
+              すべてのイベントは開催中止となっています。
+            </p>
+
+            <a
+              :href="eventStatus.sourceUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="mt-3 inline-flex min-h-10 items-center justify-center rounded-lg border border-red-200 bg-white px-3 text-xs font-black text-red-700"
+            >
+              公式の開催中止案内を見る ↗
+            </a>
+          </div>
+        </div>
+      </section>
+
       <!-- 日付切り替え -->
       <section class="sticky top-0 z-20 -mx-4 mt-3 border-y border-sky-100 bg-white/95 px-4 py-3 shadow-sm backdrop-blur">
         <div class="flex items-center justify-between gap-3">
@@ -327,6 +369,12 @@ onMounted(() => {
           >
             <div class="flex gap-3 px-3 py-3">
               <div class="w-[4.5rem] shrink-0">
+                <span
+                  v-if="isEventCancelled"
+                  class="inline-flex rounded-md border border-red-200 bg-red-50 px-2 py-1 text-[10px] font-black text-red-700"
+                >
+                  開催中止
+                </span>
                 <p class="text-lg font-black leading-none tracking-tight">
                   {{ item.startTime }}
                 </p>

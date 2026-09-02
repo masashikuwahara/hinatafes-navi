@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { boothItems } from '~/data/booths'
 import { hinaaiBooths } from '~/data/hinaaiBooths'
+import { eventStatus } from '~/data/eventStatus'
 
 type DisplayBoothItem = {
   id: string
@@ -24,9 +25,9 @@ type FilterOption = {
 const FAVORITE_STORAGE_KEY = 'hinatafes-booth-favorites-v2'
 
 useAppSeo({
-  title: '出店・ブース一覧',
+  title: '出店・ブース｜ひなたフェス2026 開催中止',
   description:
-    'ひなたフェス2026の出店・ブース一覧です。フード、物販、企画ブースなどをジャンルやエリアで絞り込み、気になるブースをお気に入り保存できます。',
+    'ひなたフェス2026は開催中止となりました。開催時に予定されていた出店・ブース・企画情報を記録として掲載しています。',
 })
 
 const hinataExpoBooths = hinaaiBooths.filter(
@@ -302,6 +303,12 @@ watch(favoriteIds, saveFavorites, {
         </div>
       </section>
 
+      <CancelledPageNotice
+        class="mt-3"
+        page-label="出店・ブース情報"
+        description="以下の出店・ブース・ひなあい企画は、開催時に予定されていた内容の記録です。"
+      />
+
       <!-- 検索・絞り込み -->
       <section class="sticky top-0 z-20 -mx-4 mt-3 border-y border-sky-100 bg-white/95 px-4 py-3 shadow-sm backdrop-blur">
         <div class="flex items-center justify-between gap-3">
@@ -415,6 +422,12 @@ watch(favoriteIds, saveFavorites, {
             絞り込み解除
           </button>
         </div>
+        <span
+          v-if="isEventCancelled"
+          class="inline-flex rounded-md border border-red-200 bg-red-50 px-2 py-1 text-[10px] font-black text-red-700"
+        >
+          開催中止
+        </span>
 
         <div
           v-if="filteredItems.length === 0"
@@ -524,6 +537,12 @@ watch(favoriteIds, saveFavorites, {
 
       <section class="mt-8">
         <div class="mb-4">
+          <p
+            v-if="eventStatus.status === 'cancelled'"
+            class="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold leading-5 text-slate-600"
+          >
+            以下の「日向坂で会いましょう」企画も、開催中止に伴い実施されません。
+          </p>
           <p class="text-xs font-black tracking-[0.12em] text-sky-600">
             HINA-AI AREA
           </p>

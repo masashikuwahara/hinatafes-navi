@@ -33,7 +33,7 @@ export const accessMeta = {
   venue: 'ひなたサンマリンスタジアム宮崎',
   sourceUrl: 'https://www.hinata-fes2026.com/access/',
   sourceLabel: 'ひなたフェス2026 公式交通情報',
-  lastVerifiedAt: '2026-08-29',
+  lastVerifiedAt: '2026-09-02',
 }
 
 export const parkingInfo = {

@@ -6,6 +6,7 @@ import {
   type SpotCategory,
   type SpotArea,
 } from '~/data/spots'
+import { eventStatus } from '~/data/eventStatus'
 
 type CoordinateStatus = 'confirmed' | 'approximate'
 
@@ -40,9 +41,9 @@ const LOCATION_OPTIONS: PositionOptions = {
 }
 
 useAppSeo({
-  title: '会場マップ',
+  title: '会場マップ｜ひなたフェス2026 開催中止',
   description:
-    'ひなたフェス2026の会場マップです。現在地、スポット、トイレ、救護、交通、出店・ブースなどを現地で確認できます。',
+    'ひなたフェス2026は開催中止となりました。開催時に予定されていた会場スポット・マップ情報を記録として掲載しています。',
 })
 
 const selectedCategory = ref<SpotCategory | 'all'>('all')
@@ -448,6 +449,19 @@ onUnmounted(() => {
           </NuxtLink>
         </div>
       </section>
+
+      <CancelledPageNotice
+        class="mt-3"
+        page-label="会場マップ"
+        description="以下のスポット情報は、開催時の会場案内として準備していた内容です。開催中止後の現地案内としては利用しないでください。"
+      />
+
+      <p
+        v-if="eventStatus.status === 'cancelled'"
+        class="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold leading-5 text-amber-900"
+      >
+        開催中止のため、フェス参加目的で会場へ向かうためのマップとしては使用しないでください。
+      </p>
 
       <!-- 現在地ステータス -->
       <section

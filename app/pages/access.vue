@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import {
   accessMeta,
   parkingInfo,
@@ -9,11 +10,16 @@ import {
   busPaymentMethods,
   accessImportantNotices,
 } from '~/data/access'
+import { eventStatus } from '~/data/eventStatus'
+
+const isEventCancelled = computed(
+  () => eventStatus.status === 'cancelled',
+)
 
 useSeoMeta({
-  title: '交通・アクセス｜ひなたフェス2026 現地ナビ',
+  title: '交通・アクセス｜ひなたフェス2026 開催中止',
   description:
-    'ひなたフェス2026の宮崎駅・宮崎空港からの臨時バス、場外駐車場、無料シャトルバス、運賃などの交通情報を現地向けにまとめています。',
+    'ひなたフェス2026は開催中止となりました。開催時に予定されていた宮崎駅・宮崎空港からの臨時バス、場外駐車場などの交通情報を記録として掲載しています。',
 })
 </script>
 
@@ -48,6 +54,59 @@ useSeoMeta({
       </div>
     </header>
 
+    <section
+      v-if="isEventCancelled"
+      class="mt-4 rounded-xl border-2 border-red-200 bg-red-50 px-4 py-4 shadow-sm"
+    >
+      <div class="flex items-start gap-3">
+        <div
+          class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-100 text-lg font-black text-red-700"
+        >
+          !
+        </div>
+
+        <div class="min-w-0 flex-1">
+          <p class="text-xs font-black tracking-[0.08em] text-red-700">
+            EVENT CANCELLED
+          </p>
+
+          <h2 class="mt-1 text-base font-black leading-6 text-red-950">
+            開催中止に伴い、臨時バスは運行されません
+          </h2>
+
+          <p class="mt-2 text-sm font-medium leading-6 text-red-900">
+            ひなたフェス2026の開催中止に伴い、
+            宮崎駅・宮崎空港とフェス会場を結ぶ臨時バスは運行されません。
+          </p>
+
+          <a
+            :href="eventStatus.sourceUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="mt-3 inline-flex min-h-10 items-center justify-center rounded-lg border border-red-200 bg-white px-3 text-xs font-black text-red-700"
+          >
+            開催中止の公式発表を見る
+            <span class="ml-1">↗</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section
+      v-if="isEventCancelled"
+      class="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"
+    >
+      <p class="text-sm font-black text-amber-950">
+        🚗 場外駐車場・無料シャトルについて
+      </p>
+
+      <p class="mt-1 text-xs font-medium leading-5 text-amber-900">
+        開催中止となったため、フェス参加を目的とした場外駐車場・
+        無料シャトルバスの利用を前提に移動しないでください。
+        払い戻しや今後の対応については、公式からの追加案内を確認してください。
+      </p>
+    </section>
+
     <!-- Quick Navigation -->
     <nav
       class="mt-6 grid grid-cols-3 gap-2"
@@ -58,9 +117,9 @@ useSeoMeta({
         class="rounded-xl border border-slate-200 bg-white px-3 py-3 text-center text-sm font-bold text-slate-700 shadow-sm"
       >
         🚌
-        <span class="mt-1 block">
-          臨時バス
-        </span>
+      <span class="mt-1 block">
+        バス
+      </span>
       </a>
 
       <a
@@ -138,7 +197,12 @@ useSeoMeta({
         <article
           v-for="route in outboundBusRoutes"
           :key="route.id"
-          class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+          class="overflow-hidden rounded-2xl border shadow-sm"
+          :class="
+            isEventCancelled
+              ? 'border-slate-200 bg-slate-50'
+              : 'border-slate-200 bg-white'
+          "
         >
           <div class="border-b border-slate-100 bg-sky-50/70 p-4">
             <span
@@ -199,7 +263,14 @@ useSeoMeta({
                   運行時間
                 </p>
 
-                <p class="mt-1 font-bold text-slate-900">
+                <p
+                  class="mt-1 font-bold"
+                  :class="
+                    isEventCancelled
+                      ? 'text-slate-400 line-through decoration-red-400'
+                      : 'text-slate-900'
+                  "
+                >
                   {{ route.firstDeparture }}
                   〜
                   {{ route.lastDeparture }}
@@ -211,7 +282,14 @@ useSeoMeta({
                   運行間隔
                 </p>
 
-                <p class="mt-1 font-bold text-slate-900">
+                <p
+                  class="mt-1 font-bold"
+                  :class="
+                    isEventCancelled
+                      ? 'text-slate-400 line-through decoration-red-400'
+                      : 'text-slate-900'
+                  "
+                >
                   {{ route.frequency }}
                 </p>
               </div>
@@ -253,6 +331,12 @@ useSeoMeta({
 
     <!-- Return -->
     <section class="mt-10">
+      <span
+        v-if="isEventCancelled"
+        class="inline-flex rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-black text-red-700"
+      >
+        運行なし
+      </span>
       <div class="mb-4">
         <p class="text-xs font-bold tracking-wider text-indigo-600">
           RETURN
@@ -262,96 +346,19 @@ useSeoMeta({
           ライブ終了後
         </h2>
       </div>
-
-      <article
-        class="rounded-2xl border border-indigo-100 bg-white shadow-sm"
+      <div
+        v-if="isEventCancelled"
+        class="mt-4 rounded-xl border border-red-200 bg-red-50 p-3"
       >
-        <div class="border-b border-indigo-100 bg-indigo-50/70 p-4">
-          <span
-            class="inline-flex rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-bold text-indigo-700"
-          >
-            復路
-          </span>
+        <p class="text-sm font-black text-red-800">
+          復路臨時バスも運行されません
+        </p>
 
-          <h3 class="mt-2 font-bold text-slate-900">
-            {{ returnBusRoute.title }}
-          </h3>
-        </div>
-
-        <div class="p-4">
-          <div class="grid grid-cols-2 gap-3">
-            <div class="rounded-xl bg-slate-50 p-3">
-              <p class="text-xs text-slate-500">
-                運行開始
-              </p>
-
-              <p class="mt-1 text-sm font-bold text-slate-900">
-                {{ returnBusRoute.startTime }}
-              </p>
-            </div>
-
-            <div class="rounded-xl bg-slate-50 p-3">
-              <p class="text-xs text-slate-500">
-                最終便
-              </p>
-
-              <p class="mt-1 text-sm font-bold text-slate-900">
-                {{ returnBusRoute.lastDeparture }}
-              </p>
-            </div>
-          </div>
-
-          <div
-            class="mt-3 rounded-xl border border-indigo-100 bg-indigo-50 p-3"
-          >
-            <p class="text-xs font-bold text-indigo-700">
-              運行目安
-            </p>
-
-            <p class="mt-1 text-sm font-bold text-slate-900">
-              {{ returnBusRoute.estimatedEnd }}
-            </p>
-          </div>
-
-          <div class="mt-5">
-            <p class="text-sm font-bold text-slate-900">
-              降車停留所
-            </p>
-
-            <div class="mt-2 flex flex-wrap gap-2">
-              <span
-                v-for="stop in returnBusRoute.stops"
-                :key="stop"
-                class="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700"
-              >
-                {{ stop }}
-              </span>
-            </div>
-          </div>
-
-          <div
-            class="mt-4 rounded-xl border border-rose-100 bg-rose-50 p-3"
-          >
-            <p class="text-sm font-bold text-rose-700">
-              宮崎空港には立ち寄りません
-            </p>
-
-            <p class="mt-1 text-xs leading-5 text-rose-600">
-              宮崎駅方面の復路臨時バスは宮崎空港を経由しません。
-            </p>
-          </div>
-
-          <ul class="mt-4 space-y-1">
-            <li
-              v-for="note in returnBusRoute.notes"
-              :key="note"
-              class="text-xs leading-5 text-slate-500"
-            >
-              ※ {{ note }}
-            </li>
-          </ul>
-        </div>
-      </article>
+        <p class="mt-1 text-xs leading-5 text-red-700">
+          フェス終了後に予定されていた宮崎駅方面への臨時バスも、
+          開催中止に伴い運行されません。
+        </p>
+      </div>
     </section>
 
     <!-- Parking -->
@@ -474,8 +481,19 @@ useSeoMeta({
         </p>
 
         <h2 class="mt-1 text-xl font-bold text-slate-900">
-          臨時バス運賃
+          {{
+            isEventCancelled
+              ? '予定されていた臨時バス運賃'
+              : '臨時バス運賃'
+          }}
         </h2>
+        <p
+          v-if="isEventCancelled"
+          class="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold leading-5 text-slate-600"
+        >
+          以下は開催時に予定されていた運賃です。
+          開催中止のため、フェス臨時バスは運行されません。
+        </p>
       </div>
 
       <div

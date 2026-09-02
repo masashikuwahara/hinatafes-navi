@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { eventStatus } from '~/data/eventStatus'
+
 
 type HeatAction = {
   id: string
@@ -18,10 +20,9 @@ type HeatLog = {
 const STORAGE_KEY = 'hinatafes-heat-log-v2'
 
 useAppSeo({
-  title: '暑さ対策・熱中症対策',
+  title: '暑さ・天候対策｜ひなたフェス2026 開催中止',
   description:
-    'ひなたフェス2026の暑さ対策・熱中症対策を確認できるページです。宮崎での屋外イベント参加前に、水分補給、休憩、日差し対策、持ち物、体調不良時の注意点をスマホで確認できます。',
-  path: '/heat',
+    'ひなたフェス2026は開催中止となりました。開催時に公式から案内されていた暑さ・天候対策情報を記録として掲載しています。',
 })
 
 const currentTimeText = ref('')
@@ -233,8 +234,14 @@ watch([drinkCount, lastDrinkAt, checkedActionIds, restMemo], saveToStorage, {
         </div>
       </section>
 
+      <CancelledPageNotice
+        class="mt-3"
+        page-label="暑さ・天候対策情報"
+        description="以下は、ひなたフェス2026開催時に利用する予定だった暑さ・天候対策の記録です。"
+      />
+
       <!-- 固定ステータス -->
-      <section
+      <section v-if="eventStatus.status !== 'cancelled'"
         class="sticky top-0 z-20 -mx-4 mt-3 border-y border-orange-100 bg-white/95 px-4 py-3 shadow-sm backdrop-blur"
       >
         <div class="grid grid-cols-3 gap-2 text-center">
@@ -289,8 +296,12 @@ watch([drinkCount, lastDrinkAt, checkedActionIds, restMemo], saveToStorage, {
       <!-- まずやること -->
       <section class="mt-4">
         <div class="mb-2 flex items-end justify-between gap-3">
-          <h2 class="text-base font-black">
-            暑さ対策でまずやること
+          <h2 class="mt-1 text-xl font-bold text-slate-900">
+            {{
+              eventStatus.status === 'cancelled'
+                ? '開催時に予定されていた暑さ・天候対策'
+                : '公式 暑さ・天候対策'
+            }}
           </h2>
           <p class="text-xs font-black text-slate-500">
             チェックして確認
